@@ -9,7 +9,7 @@ public class PlayerNameHandler : NetworkBehaviour
 
     // Thuộc tính mạng: Tự động đồng bộ cho tất cả mọi người
     [Networked]
-    public NetworkString<_64> PlayerName { get; set; }
+    public NetworkString<_16> PlayerName { get; set; }
 
     // Gọi khi nhân vật xuất hiện trên Network
     public override void Spawned()

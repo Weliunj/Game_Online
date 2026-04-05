@@ -13,7 +13,8 @@ public class PlayerUI : NetworkBehaviour
 
     [Header("Local HUD Sliders")]
     private Slider localHPSlider;
-    private Slider localStaminaSlider;
+    [SerializeField] [HideInInspector] 
+    public Slider localStaminaSlider;
 
     [Header("Blood Effect")]
     private Image bloodImage; // Obj BloodScreen trong HUD

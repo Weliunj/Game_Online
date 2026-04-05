@@ -8,9 +8,9 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
     {
        if(player == Runner.LocalPlayer)
         {
-            float rX = Random.Range(-3, 3);
-            float rZ = Random.Range(-3, 3);         
-            Runner.Spawn(PlayerPrefab, new Vector3(rX, 3, rZ) , Quaternion.identity, player);
+            float rX = Random.Range(-33, 33);
+            float rZ = Random.Range(-33, 33);         
+            Runner.Spawn(PlayerPrefab, new Vector3(rX, 5, rZ) , Quaternion.identity, player);
         }
     }
 

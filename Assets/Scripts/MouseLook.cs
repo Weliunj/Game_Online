@@ -7,10 +7,12 @@ public class MouseLook : NetworkBehaviour
     [Header("References")]
     [SerializeField] private string cameraHolderName = "CameraHolder";
     private Transform _cameraHolderTransform;
+    public GameObject spine;
     private CinemachineCamera _vcam;
     private CinemachineThirdPersonFollow _tpFollow;
 
     [Header("Look Settings")]
+    [Networked] public float _networkVerticalRotation { get; set; }
     public float mouseSensitivity = 100f;
     public float upperLookLimit = 80f;
     public float lowerLookLimit = -70f;
@@ -60,23 +62,19 @@ public class MouseLook : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (!HasInputAuthority) return;
-
-        // Nếu chuột đang mở khóa (hiện con trỏ) thì không xoay camera
         if (!_isCursorLocked) return;
 
-        // --- 1. XOAY CHUỘT ---
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Runner.DeltaTime;
+        // Tính toán góc xoay dọc
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Runner.DeltaTime;
-
-        transform.Rotate(Vector3.up * mouseX);
-
         _verticalRotation -= mouseY;
         _verticalRotation = Mathf.Clamp(_verticalRotation, lowerLookLimit, upperLookLimit);
 
-        if (_cameraHolderTransform != null)
-        {
-            _cameraHolderTransform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
-        }
+        // Đẩy giá trị lên Network để mọi người cùng nhận được
+        _networkVerticalRotation = _verticalRotation;
+
+        // Xoay thân nhân vật (ngang) thì vẫn làm ở đây
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Runner.DeltaTime;
+        transform.Rotate(Vector3.up * mouseX);
 
         // --- 2. ZOOM (CAMERA DISTANCE) ---
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -88,6 +86,20 @@ public class MouseLook : NetworkBehaviour
         }
     }
 
+    void LateUpdate()
+    {
+        if (spine != null)
+        {
+            // Sử dụng giá trị từ Network để máy mình và máy khách đều thấy spine xoay
+            spine.transform.localRotation = Quaternion.Euler(_networkVerticalRotation - 20, 0, 0);
+        }
+        
+        // Camera Holder thì chỉ cần xoay trên máy mình để nhìn cho chuẩn
+        if (HasInputAuthority && _cameraHolderTransform != null)
+        {
+            _cameraHolderTransform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
+        }
+    }
     // Hàm cập nhật trạng thái con trỏ chuột
     private void UpdateCursorState()
     {

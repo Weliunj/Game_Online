@@ -5,11 +5,11 @@ using System.Collections;
 
 public class StatsHandler : NetworkBehaviour
 {
-    // Tham chiếu đến UI để kích hoạt hiệu ứng
     private PlayerUI _playerUI;
-    private PlayerMovement playermove;
+    private ChangeDetector _changes;
 
     [Header("HP Settings")]
+    [Networked] public bool IsDead { get; set; }
     [Networked] public float NetworkHealth { get; set; } = 100f;
     public float maxHealth = 100f;
 
@@ -21,47 +21,57 @@ public class StatsHandler : NetworkBehaviour
     [Networked] public TickTimer ExhaustionTimer { get; set; }
     [Networked] public bool IsExhausted { get; set; }
 
+    [Header("Animation")]
+    [HideInInspector]
+    [SerializeField] private Animator anim;
+    [Networked] public float NetworkMoveSpeed { get; set; }
+
+    [Networked] public TickTimer LandingDelayTimer { get; set; }
+    public bool IsLandingLocked => !LandingDelayTimer.ExpiredOrNotRunning(Runner);
+      
     public override void Spawned()
     {
+        anim = GetComponentInChildren<Animator>();
         _playerUI = GetComponent<PlayerUI>();
-        playermove = GetComponent<PlayerMovement>();
+        _changes = GetChangeDetector(ChangeDetector.Source.SnapshotFrom | ChangeDetector.Source.SnapshotTo);
 
         if (Object.HasStateAuthority) 
         {
             NetworkHealth = maxHealth;
             NetworkStamina = maxStamina;
         }
+
+        // Fix cho người vào sau: Nếu thấy đối tượng đã chết thì thực thi logic chết luôn
+        if (IsDead) HandleDeathLogic();
     }
 
     public override void FixedUpdateNetwork()
     {
         if (Object.HasStateAuthority)
         {
-            if(NetworkHealth <= 0) Destroy(gameObject);
-            // Nếu đang kiệt sức
+            if (NetworkHealth <= 0 && !IsDead)
+            {
+                IsDead = true; 
+                // Không cần gọi RPC_BroadcastDeath nữa vì ChangeDetector sẽ lo
+            }
+
+            // Logic Stamina hồi phục
             if (IsExhausted)
             {
-                // Kiểm tra xem đã hết 1 giây chờ chưa
                 if (ExhaustionTimer.Expired(Runner))
                 {
-                    // Bắt đầu hồi stamina
                     NetworkStamina += staminaRegenRate * Runner.DeltaTime;
-                    
-                    // Nếu đã hồi đầy 100%
                     if (NetworkStamina >= maxStamina)
                     {
                         NetworkStamina = maxStamina;
-                        IsExhausted = false; // Hết trạng thái kiệt sức, cho phép dùng tiếp
+                        IsExhausted = false;
                     }
                 }
             }
-            else if(!IsUsingStamina) // Trạng thái bình thường
+            else if(!IsUsingStamina && NetworkStamina < maxStamina)
             {
-                if (NetworkStamina < maxStamina)
-                {
-                    NetworkStamina += staminaRegenRate * Runner.DeltaTime;
-                    NetworkStamina = Mathf.Min(NetworkStamina, maxStamina);
-                }
+                NetworkStamina += staminaRegenRate * Runner.DeltaTime;
+                NetworkStamina = Mathf.Min(NetworkStamina, maxStamina);
             }
             IsUsingStamina = false;
         }
@@ -72,14 +82,10 @@ public class StatsHandler : NetworkBehaviour
         if (Object.HasStateAuthority && !IsExhausted)
         {
             NetworkStamina -= amount;
-            
-            // Nếu chạm đáy 0
             if (NetworkStamina <= 0)
             {
                 NetworkStamina = 0;
-                IsExhausted = true; // Kích hoạt trạng thái kiệt sức
-
-                // Đặt bộ đếm thời gian chờ 1 giây
+                IsExhausted = true;
                 ExhaustionTimer = TickTimer.CreateFromSeconds(Runner, 1f);
             }
         }
@@ -88,17 +94,48 @@ public class StatsHandler : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_TakeDamage(float damage)
     {
-        NetworkHealth -= damage;
-        NetworkHealth = Mathf.Max(0, NetworkHealth);
-
-        // Gửi lệnh hiện máu đến máy của nạn nhân
-        RPC_ShowBloodEffect(Object.InputAuthority);
+        if (Object.HasStateAuthority && !IsDead)
+        {
+            NetworkHealth -= damage;
+            NetworkHealth = Mathf.Max(0, NetworkHealth);
+            RPC_ShowBloodEffect(Object.InputAuthority);
+        }
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
     private void RPC_ShowBloodEffect(PlayerRef player)
     {
-        // Gọi hàm trigger hiệu ứng bên PlayerUI
         if (_playerUI != null) _playerUI.TriggerBloodEffect();
+    }
+
+    public override void Render()
+    {
+        // Kiểm tra thay đổi trạng thái chết qua mạng
+        foreach (var change in _changes.DetectChanges(this))
+        {
+            if (change == nameof(IsDead) && IsDead)
+            {
+                HandleDeathLogic();
+            }
+        }
+    }
+
+    private void HandleDeathLogic()
+    {
+        if (anim != null) anim.SetTrigger("Die");
+
+        // Tắt các điều khiển cục bộ
+        if (GetComponent<PlayerMovement>() != null) GetComponent<PlayerMovement>().enabled = false;
+        if (GetComponent<PlayerCombat>() != null) GetComponent<PlayerCombat>().enabled = false;
+        if (GetComponent<CharacterController>() != null) GetComponent<CharacterController>().enabled = false;
+        
+        var mouselook = GetComponent<MouseLook>();
+        if (mouselook != null) mouselook.enabled = false;
+
+        if (HasInputAuthority)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 }

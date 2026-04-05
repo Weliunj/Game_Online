@@ -67,9 +67,9 @@ public class RoomManager : MonoBehaviour
 
             if (_runner.IsRunning)
             {
-                float x = Random.Range(-5f, 5f);
-                float z = Random.Range(-5f, 5f);
-                _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 0, z), Quaternion.identity, _runner.LocalPlayer);
+                float x = Random.Range(-50f, 50f);
+                float z = Random.Range(-50f, 50f);
+                _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 5, z), Quaternion.identity, _runner.LocalPlayer);
             }
         }
     }
