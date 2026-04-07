@@ -51,7 +51,7 @@ public class StatsHandler : NetworkBehaviour
         {
             if (NetworkHealth <= 0 && !IsDead)
             {
-                IsDead = true; 
+                IsDead = true;
                 // Không cần gọi RPC_BroadcastDeath nữa vì ChangeDetector sẽ lo
             }
 
@@ -125,15 +125,15 @@ public class StatsHandler : NetworkBehaviour
         if (anim != null) anim.SetTrigger("Die");
 
         // Tắt các điều khiển cục bộ
-        if (GetComponent<PlayerMovement>() != null) GetComponent<PlayerMovement>().enabled = false;
         if (GetComponent<PlayerCombat>() != null) GetComponent<PlayerCombat>().enabled = false;
-        if (GetComponent<CharacterController>() != null) GetComponent<CharacterController>().enabled = false;
         
         var mouselook = GetComponent<MouseLook>();
         if (mouselook != null) mouselook.enabled = false;
 
         if (HasInputAuthority)
         {
+            if (_playerUI != null) _playerUI.SetPermanentBloodEffect();
+
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }

@@ -1,84 +1,199 @@
-using UnityEngine;
 using Fusion;
+using UnityEngine;
+using System.Collections;
 
 public class PlayerCombat : NetworkBehaviour
 {
-    private Animator _anim;
+    public GameObject HandOffset;
+    public GameObject DropPos;
 
-    [Header("References")]
+    [Header("Current Slots")]
+    public GunWorld equippedGun; 
+    public MeleeData meleeInSlot; 
+
+    [Header("Ammo Reserve")]
+    public int pistolAmmoReserve = 15;
+    public int rifleAmmoReserve = 60;
+    public int sniperAmmoReserve = 10;
+
+    [Header("Gun Logic")]
     [SerializeField] private GameObject bulletPrefab;
-    [SerializeField] private Transform firePos; // Đầu nòng súng
-    public WeaponData weaponData; 
-    private float _nextFireTime;
+    private float nextShootTime = 0;
+    private bool isReloading = false; // Biến local để khóa input
+    private Animator animator;
+
+    // Đồng bộ trạng thái hành động qua mạng
+    [Networked] public bool IsShooting { get; set; }
+    [Networked] public bool IsReloading { get; set; }
 
     public override void Spawned()
     {
-        _anim = GetComponentInChildren<Animator>();
+        animator = GetComponentInChildren<Animator>();
     }
 
-    void Update()
+    public override void Render()
+    {
+        // Cập nhật Animation dựa trên trạng thái Networked (Mượt cho mọi Client)
+        if (animator != null)
+        {
+            animator.SetBool("Shoot", IsShooting);
+            animator.SetBool("Reload", IsReloading);
+        }
+    }
+
+    public override void FixedUpdateNetwork()
     {
         if (!HasInputAuthority) return;
-
-        if (Input.GetButton("Fire1") && Time.time >= _nextFireTime)
-        {
-            _nextFireTime = Time.time + weaponData.fireRate;
-            
-            // 1. Tìm điểm mục tiêu bằng Raycast từ giữa màn hình
-            Vector3 targetPoint = GetTargetPoint();
-
-            // 2. Gửi điểm này qua RPC để mọi máy đều sinh đạn bay về đó
-            RPC_Shoot(Object.InputAuthority, targetPoint);
-        }
         
-        _anim.SetBool("Shoot", Input.GetButton("Fire1"));
+        // Nếu không có súng hoặc đang nạp đạn (local) thì dừng
+        if (equippedGun == null || isReloading) 
+        {
+            // Reset trạng thái bắn nếu bỗng nhiên mất súng hoặc đang nạp
+            IsShooting = false;
+            return;
+        }
+
+        HandleInput();
+    }
+
+    private void HandleInput()
+    {
+        bool inputShoot = equippedGun.gunData.isAutomatic ? Input.GetMouseButton(0) : Input.GetMouseButtonDown(0);
+        
+        if (inputShoot && Time.time > nextShootTime)
+        {
+            if (equippedGun.ammoRemaining > 0) 
+            {
+                Shoot();
+            }
+            else 
+            {
+                StartCoroutine(ReloadRoutine());
+            }
+        }
+        else if (!inputShoot)
+        {
+            IsShooting = false;
+        }
+
+        if (Input.GetKeyDown(KeyCode.R)) StartCoroutine(ReloadRoutine());
+        if (Input.GetKeyDown(KeyCode.G)) RPC_DropGun();
+    }
+
+    public void Shoot()
+    {
+        nextShootTime = Time.time + equippedGun.gunData.fireRate;
+        equippedGun.ammoRemaining--;
+
+        Vector3 targetPoint = GetTargetPoint();
+
+        // RPC này chỉ dùng để sinh đạn và hiệu ứng (VFX)
+        RPC_ShootEffect(Object.InputAuthority, targetPoint);
+
+        IsShooting = true;
     }
 
     private Vector3 GetTargetPoint()
     {
-        // 1. Raycast từ tâm Camera
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
-        Vector3 target;
+        float range = equippedGun.gunData.range;
 
-        if (Physics.Raycast(ray, out hit, weaponData.range))
+        if (Physics.Raycast(ray, out hit, range))
         {
-            target = hit.point;
-            // Vẽ tia từ Camera đến điểm trúng (Màu Vàng)
-            Debug.DrawLine(ray.origin, hit.point, Color.yellow, 0.1f);
+            if (hit.collider.TryGetComponent(out StatsHandler enemyStats))
+            {
+                enemyStats.RPC_TakeDamage(equippedGun.gunData.damage);
+            }
+            return hit.point;
         }
-        else
+        return ray.GetPoint(range);
+    }
+
+    IEnumerator ReloadRoutine()
+    {
+        int reserve = GetReserveAmmo(equippedGun.gunData.ammoType);
+        if (reserve <= 0 || equippedGun.ammoRemaining == equippedGun.gunData.magSize) yield break;
+
+        // Bật trạng thái nạp đạn
+        isReloading = true;
+        IsReloading = true;
+        IsShooting = false;
+
+        yield return new WaitForSeconds(equippedGun.gunData.reloadTime);
+
+        if (equippedGun != null)
         {
-            target = ray.GetPoint(weaponData.range);
+            int ammoNeeded = equippedGun.gunData.magSize - equippedGun.ammoRemaining;
+            int ammoToLoad = Mathf.Min(ammoNeeded, reserve);
+
+            equippedGun.ammoRemaining += ammoToLoad;
+            SubtractReserveAmmo(equippedGun.gunData.ammoType, ammoToLoad);
         }
 
-        // --- DEBUG QUAN TRỌNG: Tia từ súng đến mục tiêu ---
-        // Vẽ tia từ đầu nòng súng (firePos) đến điểm mục tiêu (Màu Xanh Lá)
-        // Tia này chính là đường bay thực tế của viên đạn
-        Debug.DrawLine(firePos.position, target, Color.green, 0.5f);
+        // Tắt trạng thái nạp đạn
+        isReloading = false;
+        IsReloading = false;
+    }
 
-        return target;
+    private int GetReserveAmmo(AmmoType type)
+    {
+        return type switch
+        {
+            AmmoType.Pistol => pistolAmmoReserve,
+            AmmoType.Rifle => rifleAmmoReserve,
+            AmmoType.Sniper => sniperAmmoReserve,
+            _ => 0
+        };
+    }
+
+    private void SubtractReserveAmmo(AmmoType type, int amount)
+    {
+        if (type == AmmoType.Pistol) pistolAmmoReserve -= amount;
+        else if (type == AmmoType.Rifle) rifleAmmoReserve -= amount;
+        else if (type == AmmoType.Sniper) sniperAmmoReserve -= amount;
+    }
+
+    public void DropGunOnDeath()
+    {
+        if (equippedGun == null) return;
+
+        StopAllCoroutines();
+        isReloading = false;
+        IsReloading = false;
+        IsShooting = false;
+
+        equippedGun.RequestDrop(DropPos.transform.position, DropPos.transform.rotation);
+        equippedGun = null;
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
-    public void RPC_Shoot(PlayerRef shooter, Vector3 targetPoint)
+    private void RPC_ShootEffect(PlayerRef shooter, Vector3 targetPoint)
     {
-        if (bulletPrefab && firePos != null)
+        if (equippedGun != null && equippedGun.firePos != null)
         {
-            // TÍNH TOÁN HƯỚNG: Lấy (Điểm trúng - Đầu nòng) để ra hướng chuẩn
-            Vector3 bulletDirection = (targetPoint - firePos.position).normalized;
-            Quaternion bulletRotation = Quaternion.LookRotation(bulletDirection);
+            Vector3 firePosition = equippedGun.firePos.transform.position;
+            Vector3 shotDirection = (targetPoint - firePosition).normalized;
+            
+            Runner.Spawn(bulletPrefab, firePosition, Quaternion.LookRotation(shotDirection), shooter, (runner, obj) => {
+                obj.GetComponent<Bullet>().InitBullet(equippedGun.gunData.damage, shooter);
+            });
 
-            // Spawn bullet qua Network.Spawn thay vì Instantiate
-            NetworkObject bulletNO = Runner.Spawn(bulletPrefab, firePos.position, bulletRotation, Object.InputAuthority);
-            Bullet bulletScript = bulletNO.GetComponent<Bullet>();
-
-            if (bulletScript != null)
-            {
-                bulletScript.InitBullet(weaponData.damage, shooter);
-            }
+            Debug.DrawLine(firePosition, targetPoint, Color.yellow, 0.1f);
         }
+    }
 
-        if (_anim != null) _anim.SetTrigger("Shoot");
+    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
+    public void RPC_DropGun()
+    {
+        if (equippedGun == null) return;
+
+        StopAllCoroutines();
+        isReloading = false;
+        IsReloading = false;
+        IsShooting = false;
+
+        equippedGun.RequestDrop(DropPos.transform.position, DropPos.transform.rotation);
+        equippedGun = null;
     }
 }

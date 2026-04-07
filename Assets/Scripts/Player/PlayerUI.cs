@@ -17,7 +17,8 @@ public class PlayerUI : NetworkBehaviour
     public Slider localStaminaSlider;
 
     [Header("Blood Effect")]
-    private Image bloodImage; // Obj BloodScreen trong HUD
+    [SerializeField] [HideInInspector] 
+    public Image bloodImage; // Obj BloodScreen trong HUD
     public float fadeSpeed = 1.5f;
 
     public override void Spawned()
@@ -75,6 +76,16 @@ public class PlayerUI : NetworkBehaviour
         }
     }
 
+    public void SetPermanentBloodEffect()
+    {
+        if (bloodImage != null)
+        {
+            StopAllCoroutines();
+            Color c = bloodImage.color;
+            c.a = 0.8f;
+            bloodImage.color = c;
+        }
+    }
     public override void Render()
     {
         float hpPercent = stats.NetworkHealth / stats.maxHealth;

@@ -59,6 +59,21 @@ public class PlayerMovement : NetworkBehaviour
             return; // Thoát hàm, không đọc Input di chuyển bên dưới
         }
 
+        if (stats.IsDead)
+        {
+            if (!isGrounded)
+            {
+                playerVelocity.y += gravityValue * Runner.DeltaTime;
+            }
+            else if (playerVelocity.y < 0f)
+            {
+                playerVelocity.y = -1f;
+            }
+
+            characterController.Move(Vector3.up * playerVelocity.y * Runner.DeltaTime);
+            return;
+        }
+
         // 2. Lấy Input di chuyển TRƯỚC (Để có dữ liệu tính toán Sprint và Animator)
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");

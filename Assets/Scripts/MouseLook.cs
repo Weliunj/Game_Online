@@ -17,15 +17,11 @@ public class MouseLook : NetworkBehaviour
     public float upperLookLimit = 80f;
     public float lowerLookLimit = -70f;
 
-    [Header("Zoom Settings")]
-    public float zoomSensitivity = 2f;
-    public float minDistance = 2f;
-    public float maxDistance = 10f;
+    [Header("Fixed Camera Settings")]
+    // Khoảng cách camera cố định, bạn có thể chỉnh con số này trong Inspector
+    public float fixedCameraDistance = 5f; 
 
     private float _verticalRotation = 0f;
-    private float _currentDistance = 5f;
-    
-    // Biến lưu trạng thái khóa chuột
     private bool _isCursorLocked = true;
 
     public override void Spawned()
@@ -39,19 +35,21 @@ public class MouseLook : NetworkBehaviour
         {
             _vcam.Target.TrackingTarget = _cameraHolderTransform;
             _tpFollow = _vcam.GetComponent<CinemachineThirdPersonFollow>();
-            if (_tpFollow != null) _currentDistance = _tpFollow.CameraDistance;
+            
+            // THIẾT LẬP KHOẢNG CÁCH CỐ ĐỊNH NGAY KHI SPAWN
+            if (_tpFollow != null) 
+            {
+                _tpFollow.CameraDistance = fixedCameraDistance;
+            }
 
-            // Khởi tạo trạng thái ban đầu
             UpdateCursorState();
         }
     }
 
-    // Dùng Update để bắt phím L mượt mà hơn cho UI
     void Update()
     {
         if (!HasInputAuthority) return;
 
-        // --- BẬT/TẮT KHÓA CHUỘT KHI BẤM L ---
         if (Input.GetKeyDown(KeyCode.L))
         {
             _isCursorLocked = !_isCursorLocked;
@@ -64,43 +62,34 @@ public class MouseLook : NetworkBehaviour
         if (!HasInputAuthority) return;
         if (!_isCursorLocked) return;
 
-        // Tính toán góc xoay dọc
+        // 1. XOAY CHUỘT DỌC
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Runner.DeltaTime;
         _verticalRotation -= mouseY;
         _verticalRotation = Mathf.Clamp(_verticalRotation, lowerLookLimit, upperLookLimit);
 
-        // Đẩy giá trị lên Network để mọi người cùng nhận được
         _networkVerticalRotation = _verticalRotation;
 
-        // Xoay thân nhân vật (ngang) thì vẫn làm ở đây
+        // 2. XOAY CHUỘT NGANG
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Runner.DeltaTime;
         transform.Rotate(Vector3.up * mouseX);
-
-        // --- 2. ZOOM (CAMERA DISTANCE) ---
-        float scroll = Input.GetAxis("Mouse ScrollWheel");
-        if (scroll != 0 && _tpFollow != null)
-        {
-            _currentDistance -= scroll * zoomSensitivity;
-            _currentDistance = Mathf.Clamp(_currentDistance, minDistance, maxDistance);
-            _tpFollow.CameraDistance = _currentDistance;
-        }
+        
+        // ĐÃ XÓA PHẦN CODE ZOOM Ở ĐÂY
     }
 
     void LateUpdate()
     {
         if (spine != null)
         {
-            // Sử dụng giá trị từ Network để máy mình và máy khách đều thấy spine xoay
+            // Xoay xương sống đồng bộ qua mạng
             spine.transform.localRotation = Quaternion.Euler(_networkVerticalRotation - 20, 0, 0);
         }
         
-        // Camera Holder thì chỉ cần xoay trên máy mình để nhìn cho chuẩn
         if (HasInputAuthority && _cameraHolderTransform != null)
         {
             _cameraHolderTransform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
         }
     }
-    // Hàm cập nhật trạng thái con trỏ chuột
+
     private void UpdateCursorState()
     {
         if (_isCursorLocked)

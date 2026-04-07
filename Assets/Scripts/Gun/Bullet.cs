@@ -64,9 +64,16 @@ public class Bullet : NetworkBehaviour
                 Runner.Despawn(Object); // Dùng Despawn thay vì Destroy
             }
         }
-        else if (!other.CompareTag("Player"))
+        else if (other.CompareTag("Player"))
         {
-            // Trúng môi trường
+            // Trúng Player nhưng không có HitboxPart → dừng lại để tránh xuyên qua
+            _hasHit = true;
+            Debug.Log($"[Bullet] Trúng Player: {other.gameObject.name}");
+            Runner.Despawn(Object);
+        }
+        else
+        {
+            // Trúng môi trường khác
             _hasHit = true;
             Debug.Log($"[Bullet] Trúng vật cản: {other.name}");
             Runner.Despawn(Object);
