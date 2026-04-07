@@ -17,13 +17,12 @@ public class GunData : ScriptableObject
     public float reloadTime = 2f;    // Thời gian thay đạn
 
     [Header("ZoomMode")]     // 0.28 0.05/ o.3   /Setting pov1: distan 0, hodler 0, 0.2     // Nham : Len= 50, setivi / 3
-    public bool ZoomMode = false;
+    public bool ZoomMode = false;       //Block Run
     public GameObject ZoomImg = null;
-    public GameObject[] PlayerMesh;
-    public Transform cameraholder;
-    public float DistanceCinema;
-    public float mouseSensitivity;
-    public float LenCinema;
+    public float DivmouseSensitivity = 3;
+    public Vector3 cameraholder = new Vector3(0.4f, 0.05f, 0f);
+    public float DistanceCinema = 0.3f;
+    public float POV = 25;
     
     [Header("Chế độ bắn")]
     public bool isAutomatic; // True: Đè chuột để bắn, False: Bấm từng phát

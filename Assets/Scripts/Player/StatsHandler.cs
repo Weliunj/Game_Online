@@ -25,6 +25,8 @@ public class StatsHandler : NetworkBehaviour
     [HideInInspector]
     [SerializeField] private Animator anim;
     [Networked] public float NetworkMoveSpeed { get; set; }
+    [Networked] public float NetworkCrouchMove { get; set; } // 0: Đứng im, 1: Di chuyển khi đang ngồi
+    [Networked] public bool IsCrouching { get; set; }
 
     [Networked] public TickTimer LandingDelayTimer { get; set; }
     public bool IsLandingLocked => !LandingDelayTimer.ExpiredOrNotRunning(Runner);

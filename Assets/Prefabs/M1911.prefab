@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6317419313474130537}
   - component: {fileID: 3836003795017431533}
   - component: {fileID: 3452227575103658814}
-  - component: {fileID: 6554884930633224804}
+  - component: {fileID: 2109779934283689022}
   m_Layer: 8
   m_Name: M1911
   m_TagString: Untagged
@@ -34,12 +34,12 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4625774653578308570}
+  - {fileID: 6304962527420075917}
   - {fileID: 9061739054656166828}
   - {fileID: 351777671539753441}
   - {fileID: 1504257058877205743}
   - {fileID: 7225601839376575531}
   - {fileID: 838766134164018052}
-  - {fileID: 6304962527420075917}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6317419313474130537
@@ -56,6 +56,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GunWorld
   rb: {fileID: 3452227575103658814}
   firePos: {fileID: 972034370607420239}
+  _ownerObj: {fileID: 0}
   _hasOwner: 0
   gunData: {fileID: 11400000, guid: 5148db41f26aef94eb2816cbff0ddebe, type: 2}
   ammoRemaining: 15
@@ -105,8 +106,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!135 &6554884930633224804
-SphereCollider:
+--- !u!136 &2109779934283689022
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -123,9 +124,11 @@ SphereCollider:
   m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.25
-  m_Center: {x: 0, y: 0, z: 0}
+  serializedVersion: 2
+  m_Radius: 0.15704867
+  m_Height: 0.46817398
+  m_Direction: 2
+  m_Center: {x: 0, y: -0.029833406, z: 0.019755363}
 --- !u!1 &972034370607420239
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,8 +301,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.05602026, y: 0.20500103, z: 0.2694664}
-  m_Center: {x: -0.0014798641, y: -0.03157316, z: 0.017915726}
+  m_Size: {x: 0.06793213, y: 0.20500103, z: 0.2694664}
+  m_Center: {x: -0.0009384155, y: -0.03157316, z: 0.017915726}
 --- !u!1 &3447319409927997476
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,17 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GunData
   weaponName: SMG_F
   weaponIcon: {fileID: 0}
-  damage: 4
+  damage: 2
   fireRate: 0.2
   range: 150
   magSize: 30
   reloadTime: 3
   ZoomMode: 0
   ZoomImg: {fileID: 0}
-  PlayerMesh: []
-  cameraholder: {fileID: 0}
-  DistanceCinema: 0
-  mouseSensitivity: 0
-  LenCinema: 0
+  DivmouseSensitivity: 3
+  cameraholder: {x: 0.4, y: 0.05, z: 0}
+  DistanceCinema: 0.3
+  POV: 25
   isAutomatic: 1
   ammoType: 1

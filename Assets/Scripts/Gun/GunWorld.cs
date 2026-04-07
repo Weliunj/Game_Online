@@ -21,12 +21,26 @@ public class GunWorld : NetworkBehaviour
             ammoRemaining = gunData.magSize; 
     }
 
+    public override void FixedUpdateNetwork()
+    {
+        if (!Object.HasStateAuthority) return;
+
+        if (hasOwner && ownerObj == null)
+        {
+            ResetOwnership();
+        }
+    }
+
     public override void Render()
     {
         // Nếu có chủ, thực hiện gắn súng vào tay (Chạy trên tất cả các Client)
         if (hasOwner && ownerObj != null)
         {
             AttachToHandLocal();
+        }
+        else if (!hasOwner && transform.parent != null)
+        {
+            DetachFromHandLocal();
         }
     }
 
@@ -72,6 +86,34 @@ public class GunWorld : NetworkBehaviour
         }
     }
 
+    private void DetachFromHandLocal()
+    {
+        if (transform.parent == null) return;
+
+        PlayerCombat combat = transform.parent.GetComponent<PlayerCombat>();
+        if (combat != null && combat.equippedGun == this)
+        {
+            combat.equippedGun = null;
+        }
+
+        transform.SetParent(null);
+    }
+
+    private void ResetOwnership()
+    {
+        hasOwner = false;
+        ownerObj = null;
+        pickupTimer = TickTimer.CreateFromSeconds(Runner, 0.1f);
+
+        DetachFromHandLocal();
+
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+        }
+        GetComponent<Collider>().enabled = true;
+    }
+
     public void RequestDrop(Vector3 position, Quaternion rotation)
     {
         hasOwner = false;
@@ -80,7 +122,7 @@ public class GunWorld : NetworkBehaviour
         // THIẾT LẬP KHÓA NHẶT ĐỒ TRONG 0.5 GIÂY
         pickupTimer = TickTimer.CreateFromSeconds(Runner, 0.5f);
 
-        transform.SetParent(null);
+        DetachFromHandLocal();
         transform.position = position;
         transform.rotation = rotation;
 

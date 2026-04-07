@@ -9,6 +9,7 @@ public class PlayerMovement : NetworkBehaviour
     [Header("Movement Settings")]
     [HideInInspector]
     [SerializeField] public bool isSprinting;
+    [SerializeField] public bool isCrouching;
     public float moveSpeed = 5f;
     public float jumpHeight = 2f;
     private bool jumped = false;
@@ -16,7 +17,7 @@ public class PlayerMovement : NetworkBehaviour
 
     [Header("Stamina cost")]
     public float sprintMultiplier = 1.5f;
-    public float jumpStaminaCost = 10f;
+    public float jumpStaminaCost = 15f;
     public float sprintStaminaCost = 10f;
 
     private Vector3 playerVelocity;
@@ -79,28 +80,37 @@ public class PlayerMovement : NetworkBehaviour
         float v = Input.GetAxisRaw("Vertical");
         Vector3 move = (transform.forward * v + transform.right * h).normalized;
 
-        // 3. Tính toán trạng thái Sprint
-        // Sử dụng move.magnitude > 0.1f để check xem người chơi có đang di chuyển không
-        isSprinting = Input.GetKey(KeyCode.LeftShift) && stats.NetworkStamina > 0.1f && !stats.IsExhausted && v > 0.1f;
-        float currSpeed = isSprinting ? moveSpeed * sprintMultiplier : moveSpeed;
+        // 3. LOGIC NGỒI (CROUCH)
+        // Giữ phím LeftControl để ngồi
+        bool wantToCrouch = Input.GetKey(KeyCode.LeftControl);
+        stats.IsCrouching = wantToCrouch;
 
-        // 4. Trừ stamina khi chạy
-        if (isSprinting)
+        // 4. TÍNH TOÁN TỐC ĐỘ
+        var combat = GetComponent<PlayerCombat>();
+        bool isZooming = combat != null && combat.IsZooming;
+        isSprinting = Input.GetKey(KeyCode.LeftShift) && stats.NetworkStamina > 0.1f && !stats.IsExhausted && v > 0.1f && !stats.IsCrouching && !isZooming;
+        
+        float speedMod = 1f;
+        if (stats.IsCrouching) speedMod = 0.7f; // Đi chậm khi ngồi
+        else if (isSprinting) 
         {
-            stats.IsUsingStamina = true;
+            speedMod = sprintMultiplier;
+            stats.IsUsingStamina = true; 
             stats.ConsumingStamina(sprintStaminaCost * Runner.DeltaTime);
         }
 
-        // 5. Cập nhật giá trị Animator (0: Idle, 1: Walk, 2: Run)
-        float moveMagnitude = 0;
-        if (move.magnitude > 0.1f) 
-        {
-            moveMagnitude = isSprinting ? 2f : 1f;
-        }
+        float currSpeed = moveSpeed * speedMod;
+
+        // 5. CẬP NHẬT BIẾN ANIMATOR MẠNG
+        float moveMagnitude = (move.magnitude > 0.1f) ? (isSprinting ? 2f : 1f) : 0f;
         stats.NetworkMoveSpeed = moveMagnitude;
+
+        //Crouch move
+        float crouchMoveVal = (stats.IsCrouching && move.magnitude > 0.1f) ? 1f : 0f;
+        stats.NetworkCrouchMove = crouchMoveVal;
         
-        // 6. Logic Nhảy (Jump)
-        if (Input.GetButton("Jump") && isGrounded && stats.NetworkStamina >= jumpStaminaCost && !stats.IsExhausted)
+        // 6. NHẢY & TRỌNG LỰC (Giữ nguyên, lưu ý: thường không cho nhảy khi đang ngồi)
+        if (Input.GetButton("Jump") && isGrounded && !stats.IsCrouching && !isZooming && stats.NetworkStamina >= jumpStaminaCost)
         {
             jumped = true;
             playerVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
@@ -110,10 +120,8 @@ public class PlayerMovement : NetworkBehaviour
             RPC_TriggerJumpAnimation();
         }
 
-        // 7. Áp dụng trọng lực
+        // 7. DI CHUYỂN TỔNG HỢP
         playerVelocity.y += gravityValue * Runner.DeltaTime;
-
-        // 8. Di chuyển tổng hợp
         Vector3 finalMove = (move * currSpeed) + Vector3.up * playerVelocity.y;
         characterController.Move(finalMove * Runner.DeltaTime);
     }
@@ -125,14 +133,20 @@ public class PlayerMovement : NetworkBehaviour
             animator.SetTrigger("Jump");
     }
 
+
+
     public override void Render()
     {
         if (animator != null)
         {
-            // Sử dụng giá trị đã được đồng bộ qua mạng để chạy Animation
-            // Tham số "Speed" phải khớp với tên trong Animator Blend Tree
+            // Đồng bộ các thông số Animator
+            animator.SetBool("isCrouching", stats.IsCrouching);
+            
+            // Speed dành cho chạy/đi bộ bình thường
             animator.SetFloat("Speed", stats.NetworkMoveSpeed, 0.1f, Time.deltaTime);
-            //damp time: thoi gian lam muot
+            
+            // CrouchMove: 0 là Idle ngồi, 1 là Walk ngồi (Sử dụng Float để dùng Blend Tree)
+            animator.SetFloat("CrouchMove", stats.NetworkCrouchMove, 0.1f, Time.deltaTime);
         }
     }
 }

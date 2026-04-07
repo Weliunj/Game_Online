@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 497142434973656954}
   - component: {fileID: 5296773209746152693}
   - component: {fileID: 93365266549481235}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: pati1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4859,7 +4859,7 @@ GameObject:
   - component: {fileID: 5034624988920932371}
   - component: {fileID: 6474499966443008333}
   - component: {fileID: 3987037908216120403}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: FireZone
   m_TagString: Untagged
   m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}

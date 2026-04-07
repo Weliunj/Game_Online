@@ -25,10 +25,23 @@ public class PlayerCombat : NetworkBehaviour
     // Đồng bộ trạng thái hành động qua mạng
     [Networked] public bool IsShooting { get; set; }
     [Networked] public bool IsReloading { get; set; }
+    [Networked] public bool IsZooming { get; set; }
+
+    [Header("Zoom Settings")]
+    public GameObject CameraHolder;
+    private Vector3 defaultcameraholder;
+    private MouseLook mouseLook;
+    private float defaultFOV;
+    private float defaultSensitivity;
 
     public override void Spawned()
     {
         animator = GetComponentInChildren<Animator>();
+        mouseLook = GetComponent<MouseLook>();
+
+        defaultcameraholder = CameraHolder.transform.localPosition;
+        defaultFOV = mouseLook.POV;
+        defaultSensitivity = mouseLook.mouseSensitivity;
     }
 
     public override void Render()
@@ -38,6 +51,25 @@ public class PlayerCombat : NetworkBehaviour
         {
             animator.SetBool("Shoot", IsShooting);
             animator.SetBool("Reload", IsReloading);
+            animator.SetBool("isZooming", IsZooming);
+        }
+
+        // Lerp camera position, FOV, sensitivity cho zoom mượt
+        if (equippedGun != null)
+        {
+            Vector3 targetPos = IsZooming ? equippedGun.gunData.cameraholder : defaultcameraholder;
+            CameraHolder.transform.localPosition = Vector3.Lerp(CameraHolder.transform.localPosition, targetPos, Time.deltaTime * 10f);
+
+            float targetFOV = IsZooming ? equippedGun.gunData.POV : defaultFOV;
+            mouseLook._vcam.Lens.FieldOfView = Mathf.Lerp(mouseLook._vcam.Lens.FieldOfView, targetFOV, Time.deltaTime * 10f);
+
+            float targetSensitivity = IsZooming ? defaultSensitivity / equippedGun.gunData.DivmouseSensitivity : defaultSensitivity;
+            mouseLook.mouseSensitivity = Mathf.Lerp(mouseLook.mouseSensitivity, targetSensitivity, Time.deltaTime * 10f);
+
+            if (equippedGun.gunData.ZoomImg != null)
+            {
+                equippedGun.gunData.ZoomImg.SetActive(IsZooming);
+            }
         }
     }
 
@@ -50,9 +82,10 @@ public class PlayerCombat : NetworkBehaviour
         {
             // Reset trạng thái bắn nếu bỗng nhiên mất súng hoặc đang nạp
             IsShooting = false;
+            IsZooming = false;
             return;
         }
-
+        // Zoommode();
         HandleInput();
     }
 
@@ -75,6 +108,9 @@ public class PlayerCombat : NetworkBehaviour
         {
             IsShooting = false;
         }
+
+        // Zoom logic
+        IsZooming = Input.GetMouseButton(1);
 
         if (Input.GetKeyDown(KeyCode.R)) StartCoroutine(ReloadRoutine());
         if (Input.GetKeyDown(KeyCode.G)) RPC_DropGun();
@@ -101,10 +137,6 @@ public class PlayerCombat : NetworkBehaviour
 
         if (Physics.Raycast(ray, out hit, range))
         {
-            if (hit.collider.TryGetComponent(out StatsHandler enemyStats))
-            {
-                enemyStats.RPC_TakeDamage(equippedGun.gunData.damage);
-            }
             return hit.point;
         }
         return ray.GetPoint(range);
@@ -134,6 +166,12 @@ public class PlayerCombat : NetworkBehaviour
         // Tắt trạng thái nạp đạn
         isReloading = false;
         IsReloading = false;
+
+        // Nếu vẫn giữ chuột phải sau khi nạp xong, quay lại zoom
+        if (Input.GetMouseButton(1))
+        {
+            IsZooming = true;
+        }
     }
 
     private int GetReserveAmmo(AmmoType type)
@@ -167,7 +205,7 @@ public class PlayerCombat : NetworkBehaviour
         equippedGun = null;
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_ShootEffect(PlayerRef shooter, Vector3 targetPoint)
     {
         if (equippedGun != null && equippedGun.firePos != null)
@@ -192,6 +230,7 @@ public class PlayerCombat : NetworkBehaviour
         isReloading = false;
         IsReloading = false;
         IsShooting = false;
+        IsZooming = false;
 
         equippedGun.RequestDrop(DropPos.transform.position, DropPos.transform.rotation);
         equippedGun = null;

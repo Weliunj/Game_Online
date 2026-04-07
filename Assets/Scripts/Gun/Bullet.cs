@@ -4,79 +4,87 @@ using Fusion;
 public class Bullet : NetworkBehaviour
 {
     [Header("Settings")]
-    public float speed = 60f;
+    public float speed = 120f;
     public float lifeTime = 2f;
     
-    // KHÔNG dùng [Networked] cho các biến này để tránh lỗi truy cập sớm
-    private float _damage;
-    private PlayerRef _shooterRef;
-    private bool _hasHit = false; 
-    private TickTimer _destructionTimer;
+    [Networked] private TickTimer _destructionTimer { get; set; }
+    [Networked] private float _damage { get; set; }
+    [Networked] private PlayerRef _shooterRef { get; set; }
+    [Networked] private bool _hasHitNet { get; set; }
 
     public void InitBullet(float dmg, PlayerRef shooter)
     {
         _damage = dmg;
         _shooterRef = shooter;
-        _hasHit = false;
-        
-        // Dùng TickTimer của Fusion để tự hủy sau một khoảng thời gian
+        _hasHitNet = false; // Đảm bảo reset khi mới spawn
         _destructionTimer = TickTimer.CreateFromSeconds(Runner, lifeTime);
     }
 
     public override void FixedUpdateNetwork()
     {
-        // Di chuyển viên đạn trong nhịp vật lý của mạng
-        if (!_hasHit)
-        {
-            transform.Translate(Vector3.forward * speed * Runner.DeltaTime);
-        }
-
-        // Tự hủy khi hết thời gian
+        // 1. Kiểm tra hết hạn (Timer)
         if (_destructionTimer.Expired(Runner))
         {
             Runner.Despawn(Object);
+            return;
         }
-    }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        // Chỉ xử lý va chạm trên máy có quyền (State Authority) hoặc máy chủ
-        if (!Object.HasStateAuthority || _hasHit) return;
+        // 2. Nếu đã xác nhận trúng ở Tick trước thì không chạy logic nữa
+        if (_hasHitNet) return;
 
-        HandleHit(other);
+        float moveDistance = speed * Runner.DeltaTime;
+        if (moveDistance <= 0) moveDistance = 0.1f; 
+
+        Vector3 direction = transform.forward;
+
+        // 3. Dự đoán va chạm
+        int layerMask = ~LayerMask.GetMask("Fire");
+        if (Physics.Raycast(transform.position, direction, out RaycastHit hit, moveDistance, layerMask))
+        {
+            // Kiểm tra xem có phải trúng chính người bắn không
+            // Nếu trúng chính mình thì KHÔNG set _hasHitNet để đạn bay xuyên qua
+            bool isSelf = false;
+            if (hit.collider.CompareTag("Player"))
+            {
+                var stats = hit.collider.GetComponentInParent<StatsHandler>();
+                if (stats != null && stats.Object.InputAuthority == _shooterRef) isSelf = true;
+            }
+
+            if (!isSelf)
+            {
+                _hasHitNet = true; // Khóa va chạm trên toàn mạng
+                transform.position = hit.point;
+                HandleHit(hit.collider);
+                return;
+            }
+        }
+
+        // 4. Di chuyển nếu không trúng gì (hoặc trúng chính mình)
+        transform.position += direction * moveDistance;
     }
 
     private void HandleHit(Collider other)
     {
-        HitboxPart part = other.GetComponentInParent<HitboxPart>();
+        // Chỉ Server/State Authority mới thực hiện trừ máu và Despawn
+        if (!Object.HasStateAuthority) return;
+
+        HitboxPart part = other.GetComponent<HitboxPart>();
+        if (part == null) part = other.GetComponentInParent<HitboxPart>();
 
         if (part != null)
         {
-            // Kiểm tra tránh bắn nhầm mình
-            if (part.rootStats.Object.InputAuthority == _shooterRef) return;
-
             if (!part.rootStats.IsDead)
             {
-                _hasHit = true;
-                part.OnHit(_damage); // Gọi OnHit để trừ máu
-                
-                Debug.Log($"✓ [Bullet] Trúng {part.gameObject.name}");
-                Runner.Despawn(Object); // Dùng Despawn thay vì Destroy
+                part.OnHit(_damage);
+                Debug.Log($"[Hit] {other.name} - Damage: {_damage}");
             }
-        }
-        else if (other.CompareTag("Player"))
-        {
-            // Trúng Player nhưng không có HitboxPart → dừng lại để tránh xuyên qua
-            _hasHit = true;
-            Debug.Log($"[Bullet] Trúng Player: {other.gameObject.name}");
-            Runner.Despawn(Object);
         }
         else
         {
-            // Trúng môi trường khác
-            _hasHit = true;
-            Debug.Log($"[Bullet] Trúng vật cản: {other.name}");
-            Runner.Despawn(Object);
+            Debug.Log($"[Env] Trúng vật cản: {other.name}");
         }
+
+        // Chắc chắn biến mất sau khi đã xử lý xong va chạm hợp lệ
+        Runner.Despawn(Object);
     }
 }

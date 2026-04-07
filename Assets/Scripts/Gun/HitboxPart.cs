@@ -15,9 +15,6 @@ public class HitboxPart : MonoBehaviour
     public void OnHit(float baseDamage)
     {
         float finalDamage = baseDamage * damageMultiplier;
-        Debug.Log($"[HitboxPart] {gameObject.name} - Base DMG: {baseDamage}, Multiplier: {damageMultiplier}, Final: {finalDamage}");
         rootStats.RPC_TakeDamage(finalDamage);
-        
-        Debug.Log("Trúng bộ phận: " + gameObject.name + " - Sát thương thực tế: " + finalDamage);
     }
 }

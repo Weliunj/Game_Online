@@ -14,17 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: M1911
   weaponIcon: {fileID: 0}
-  damage: 15
-  fireRate: 1
+  damage: 5
+  fireRate: 0.3
   range: 150
   magSize: 15
-  reloadTime: 3
+  reloadTime: 2
   ZoomMode: 0
   ZoomImg: {fileID: 0}
-  PlayerMesh: []
-  cameraholder: {fileID: 0}
-  DistanceCinema: 0
-  mouseSensitivity: 0
-  LenCinema: 0
+  DivmouseSensitivity: 3
+  cameraholder: {x: 0.4, y: 0.05, z: 0}
+  DistanceCinema: 0.3
+  POV: 25
   isAutomatic: 0
   ammoType: 0

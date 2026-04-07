@@ -510,6 +510,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   isSprinting: 0
+  isCrouching: 0
   moveSpeed: 5
   jumpHeight: 2
   gravityValue: -20
@@ -531,10 +532,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MouseLook
   cameraHolderName: CameraHolder
   spine: {fileID: 1298497975502935460}
+  _vcam: {fileID: 0}
   __networkVerticalRotation: 0
-  mouseSensitivity: 70
+  mouseSensitivity: 120
   upperLookLimit: 55
   lowerLookLimit: -70
+  POV: 60
   fixedCameraDistance: 1.3
 --- !u!114 &991449620581991127
 MonoBehaviour:
@@ -574,6 +577,8 @@ MonoBehaviour:
   _IsExhausted: 0
   anim: {fileID: 0}
   _NetworkMoveSpeed: 0
+  _NetworkCrouchMove: 0
+  _IsCrouching: 0
 --- !u!114 &7234823233390691569
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -613,6 +618,8 @@ MonoBehaviour:
   bulletPrefab: {fileID: 6152012165266093810, guid: c7f49b9cb43716740a8991be5ac07f07, type: 3}
   _IsShooting: 0
   _IsReloading: 0
+  _IsZooming: 0
+  CameraHolder: {fileID: 3942646182165188719}
 --- !u!1 &8264358661384262696
 GameObject:
   m_ObjectHideFlags: 0
@@ -941,7 +948,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7490820596357379581, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_Height
-      value: 0.7044966
+      value: 0.73931646
       objectReference: {fileID: 0}
     - target: {fileID: 7490820596357379581, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_Radius
@@ -953,47 +960,47 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7490820596357379581, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_Center.y
-      value: 0.35602772
+      value: 0.3386178
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.00002
+      value: 0.000020000967
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.0014
+      value: 0.0014000024
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.00077
+      value: 0.00076998543
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.25488183
+      value: -0.24811035
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.16365746
+      value: -0.17375182
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.63634604
+      value: -0.6642976
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.70944715
+      value: -0.68334484
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -55.033
+      value: -55.252
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 76.215
+      value: 84.257
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 96.029
+      value: 89.427
       objectReference: {fileID: 0}
     - target: {fileID: 7862291545168307367, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: rootStats

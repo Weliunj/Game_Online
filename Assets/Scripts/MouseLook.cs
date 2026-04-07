@@ -8,18 +8,19 @@ public class MouseLook : NetworkBehaviour
     [SerializeField] private string cameraHolderName = "CameraHolder";
     private Transform _cameraHolderTransform;
     public GameObject spine;
-    private CinemachineCamera _vcam;
+    public CinemachineCamera _vcam;
     private CinemachineThirdPersonFollow _tpFollow;
 
     [Header("Look Settings")]
     [Networked] public float _networkVerticalRotation { get; set; }
-    public float mouseSensitivity = 100f;
-    public float upperLookLimit = 80f;
+    public float mouseSensitivity = 80f;
+    public float upperLookLimit = 55f;
     public float lowerLookLimit = -70f;
+    public float POV = 60;
 
     [Header("Fixed Camera Settings")]
     // Khoảng cách camera cố định, bạn có thể chỉnh con số này trong Inspector
-    public float fixedCameraDistance = 5f; 
+    public float fixedCameraDistance = 1.3f; 
 
     private float _verticalRotation = 0f;
     private bool _isCursorLocked = true;
@@ -34,6 +35,8 @@ public class MouseLook : NetworkBehaviour
         if (_vcam != null && _cameraHolderTransform != null)
         {
             _vcam.Target.TrackingTarget = _cameraHolderTransform;
+            _vcam.Lens.FieldOfView = POV;
+            
             _tpFollow = _vcam.GetComponent<CinemachineThirdPersonFollow>();
             
             // THIẾT LẬP KHOẢNG CÁCH CỐ ĐỊNH NGAY KHI SPAWN
