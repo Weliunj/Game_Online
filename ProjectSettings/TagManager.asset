@@ -6,6 +6,7 @@ TagManager:
   tags:
   - BloodUI
   - HUD
+  - ZoomImg
   layers:
   - Default
   - TransparentFX

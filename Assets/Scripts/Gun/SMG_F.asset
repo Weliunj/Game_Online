@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GunData
   weaponName: SMG_F
   weaponIcon: {fileID: 0}
-  damage: 2
+  damage: 4
   fireRate: 0.2
   range: 150
   magSize: 30
   reloadTime: 3
   ZoomMode: 0
-  ZoomImg: {fileID: 0}
+  hasZoomImg: 0
   DivmouseSensitivity: 3
   cameraholder: {x: 0.4, y: 0.05, z: 0}
   DistanceCinema: 0.3

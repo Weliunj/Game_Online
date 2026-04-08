@@ -5,8 +5,8 @@ using System.Collections;
 
 public class StatsHandler : NetworkBehaviour
 {
-    private PlayerUI _playerUI;
     private ChangeDetector _changes;
+    private bool _deathHandled;
 
     [Header("HP Settings")]
     [Networked] public bool IsDead { get; set; }
@@ -34,7 +34,6 @@ public class StatsHandler : NetworkBehaviour
     public override void Spawned()
     {
         anim = GetComponentInChildren<Animator>();
-        _playerUI = GetComponent<PlayerUI>();
         _changes = GetChangeDetector(ChangeDetector.Source.SnapshotFrom | ChangeDetector.Source.SnapshotTo);
 
         if (Object.HasStateAuthority) 
@@ -45,6 +44,13 @@ public class StatsHandler : NetworkBehaviour
 
         // Fix cho người vào sau: Nếu thấy đối tượng đã chết thì thực thi logic chết luôn
         if (IsDead) HandleDeathLogic();
+
+        if (HasInputAuthority)
+        {
+            var hud = LocalHUDController.Instance;
+            if (hud != null)
+                hud.SetTarget(this);
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -107,11 +113,19 @@ public class StatsHandler : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
     private void RPC_ShowBloodEffect(PlayerRef player)
     {
-        if (_playerUI != null) _playerUI.TriggerBloodEffect();
+        var hud = LocalHUDController.Instance;
+        if (hud != null) hud.TriggerBloodEffect();
     }
 
     public override void Render()
     {
+        if (HasInputAuthority)
+        {
+            var hud = LocalHUDController.Instance;
+            if (hud != null)
+                hud.SetBars(NetworkHealth / maxHealth, NetworkStamina / maxStamina);
+        }
+
         // Kiểm tra thay đổi trạng thái chết qua mạng
         foreach (var change in _changes.DetectChanges(this))
         {
@@ -124,17 +138,26 @@ public class StatsHandler : NetworkBehaviour
 
     private void HandleDeathLogic()
     {
+        if (_deathHandled) return;
+        _deathHandled = true;
+
         if (anim != null) anim.SetTrigger("Die");
 
-        // Tắt các điều khiển cục bộ
-        if (GetComponent<PlayerCombat>() != null) GetComponent<PlayerCombat>().enabled = false;
+        // Chết là phải rơi súng, không cần out server.
+        var combat = GetComponent<PlayerCombat>();
+        if (combat != null)
+        {
+            combat.DropGunOnDeath();
+            combat.enabled = false;
+        }
         
         var mouselook = GetComponent<MouseLook>();
         if (mouselook != null) mouselook.enabled = false;
 
         if (HasInputAuthority)
         {
-            if (_playerUI != null) _playerUI.SetPermanentBloodEffect();
+            var hud = LocalHUDController.Instance;
+            if (hud != null) hud.SetPermanentBloodEffect();
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;

@@ -16,6 +16,8 @@ public class RoomManager : MonoBehaviour
     [Header("Spawning")]
     public NetworkObject playerPrefab; 
     public GameObject spawnPos;
+    [Tooltip("Nếu bật: người đầu tiên vào phòng sẽ bị khóa điều khiển như mannequin để giảm bug host đầu tiên.")]
+    public bool firstJoinAsMannequin = true;
 
     public static string LocalPlayerName = "Guest"; 
 
@@ -69,8 +71,28 @@ public class RoomManager : MonoBehaviour
             {
                 float x = Random.Range(-50f, 50f);
                 float z = Random.Range(-50f, 50f);
-                _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 5, z), Quaternion.identity, _runner.LocalPlayer);
+                var spawned = _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 5, z), Quaternion.identity, _runner.LocalPlayer);
+
+                if (spawned != null && firstJoinAsMannequin && CountActivePlayers(_runner) <= 1)
+                {
+                    var movement = spawned.GetComponent<PlayerMovement>();
+                    if (movement != null) movement.enabled = false;
+
+                    var combat = spawned.GetComponent<PlayerCombat>();
+                    if (combat != null) combat.enabled = false;
+
+                    var look = spawned.GetComponent<MouseLook>();
+                    if (look != null) look.enabled = false;
+                }
             }
         }
+    }
+
+    private int CountActivePlayers(NetworkRunner runner)
+    {
+        int count = 0;
+        foreach (var _ in runner.ActivePlayers)
+            count++;
+        return count;
     }
 }

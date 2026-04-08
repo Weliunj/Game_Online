@@ -9,6 +9,8 @@ public class PlayerCombat : NetworkBehaviour
 
     [Header("Current Slots")]
     public GunWorld equippedGun; 
+    /// <summary>Local-only: đã bấm vứt súng nhưng trạng thái mạng hasOwner có thể chậm 1 vài tick.</summary>
+    public bool GunDropPending;
     public MeleeData meleeInSlot; 
 
     [Header("Ammo Reserve")]
@@ -46,6 +48,8 @@ public class PlayerCombat : NetworkBehaviour
 
     public override void Render()
     {
+        SyncEquippedGunCache();
+
         // Cập nhật Animation dựa trên trạng thái Networked (Mượt cho mọi Client)
         if (animator != null)
         {
@@ -53,6 +57,9 @@ public class PlayerCombat : NetworkBehaviour
             animator.SetBool("Reload", IsReloading);
             animator.SetBool("isZooming", IsZooming);
         }
+
+        // Zoom / camera chỉ áp dụng cho người chơi local (tránh dùng equippedGun sai trên proxy)
+        if (!Object.HasInputAuthority) return;
 
         // Lerp camera position, FOV, sensitivity cho zoom mượt
         if (equippedGun != null)
@@ -66,15 +73,16 @@ public class PlayerCombat : NetworkBehaviour
             float targetSensitivity = IsZooming ? defaultSensitivity / equippedGun.gunData.DivmouseSensitivity : defaultSensitivity;
             mouseLook.mouseSensitivity = Mathf.Lerp(mouseLook.mouseSensitivity, targetSensitivity, Time.deltaTime * 10f);
 
-            if (equippedGun.gunData.ZoomImg != null)
+            if (equippedGun.zoomImg != null)
             {
-                equippedGun.gunData.ZoomImg.SetActive(IsZooming);
+                equippedGun.zoomImg.SetActive(IsZooming);
             }
         }
     }
 
     public override void FixedUpdateNetwork()
     {
+        SyncEquippedGunCache();
         if (!HasInputAuthority) return;
         
         // Nếu không có súng hoặc đang nạp đạn (local) thì dừng
@@ -91,6 +99,7 @@ public class PlayerCombat : NetworkBehaviour
 
     private void HandleInput()
     {
+        if (equippedGun == null) return;
         bool inputShoot = equippedGun.gunData.isAutomatic ? Input.GetMouseButton(0) : Input.GetMouseButtonDown(0);
         
         if (inputShoot && Time.time > nextShootTime)
@@ -113,7 +122,11 @@ public class PlayerCombat : NetworkBehaviour
         IsZooming = Input.GetMouseButton(1);
 
         if (Input.GetKeyDown(KeyCode.R)) StartCoroutine(ReloadRoutine());
-        if (Input.GetKeyDown(KeyCode.G)) RPC_DropGun();
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            GunDropPending = true;
+            RequestDropCurrentGun();
+        }
     }
 
     public void Shoot()
@@ -134,8 +147,8 @@ public class PlayerCombat : NetworkBehaviour
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
         float range = equippedGun.gunData.range;
-
-        if (Physics.Raycast(ray, out hit, range))
+        int layerMask = ~LayerMask.GetMask("Fire");
+        if (Physics.Raycast(ray, out hit, range, layerMask))
         {
             return hit.point;
         }
@@ -201,8 +214,8 @@ public class PlayerCombat : NetworkBehaviour
         IsReloading = false;
         IsShooting = false;
 
-        equippedGun.RequestDrop(DropPos.transform.position, DropPos.transform.rotation);
-        equippedGun = null;
+        GunDropPending = true;
+        RequestDropCurrentGun();
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
@@ -221,18 +234,30 @@ public class PlayerCombat : NetworkBehaviour
         }
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
-    public void RPC_DropGun()
+    private void RequestDropCurrentGun()
     {
         if (equippedGun == null) return;
 
-        StopAllCoroutines();
-        isReloading = false;
-        IsReloading = false;
-        IsShooting = false;
-        IsZooming = false;
-
-        equippedGun.RequestDrop(DropPos.transform.position, DropPos.transform.rotation);
+        equippedGun.RPC_RequestDrop(DropPos.transform.position, DropPos.transform.rotation);
         equippedGun = null;
+    }
+
+    private void SyncEquippedGunCache()
+    {
+        equippedGun = null;
+        for (int i = 0; i < GunWorld.AllGuns.Count; i++)
+        {
+            var gun = GunWorld.AllGuns[i];
+            if (gun == null) continue;
+            if (gun.hasOwner && gun.ownerObj == Object)
+            {
+                equippedGun = gun;
+                GunDropPending = false;
+                return;
+            }
+        }
+
+        // Không còn súng nào sở hữu => clear pending để cho phép nhặt lại.
+        GunDropPending = false;
     }
 }

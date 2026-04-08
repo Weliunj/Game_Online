@@ -20,10 +20,10 @@ MonoBehaviour:
   magSize: 10
   reloadTime: 7
   ZoomMode: 0
-  ZoomImg: {fileID: 0}
+  hasZoomImg: 1
   DivmouseSensitivity: 5
-  cameraholder: {x: 0.4, y: 0.05, z: 5}
-  DistanceCinema: 0.3
+  cameraholder: {x: 0.4, y: 0.05, z: 6}
+  DistanceCinema: 0.2
   POV: 20
   isAutomatic: 0
   ammoType: 2

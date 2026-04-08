@@ -401,7 +401,6 @@ GameObject:
   - component: {fileID: 913482047191032369}
   - component: {fileID: 7195097385152433857}
   - component: {fileID: -5915197354842826576}
-  - component: {fileID: 991449620581991127}
   - component: {fileID: 3118718109591380497}
   - component: {fileID: 7234823233390691569}
   - component: {fileID: 515688232855161707}
@@ -444,13 +443,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
   SortKey: 694383188
   ObjectInterest: 1
-  Flags: 262145
+  Flags: 786433
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 6467244814416610502}
   - {fileID: 7195097385152433857}
   - {fileID: -5915197354842826576}
-  - {fileID: 991449620581991127}
   - {fileID: 3118718109591380497}
   - {fileID: 7234823233390691569}
   - {fileID: 515688232855161707}
@@ -491,7 +489,7 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 0.89
-  m_Radius: 0.11
+  m_Radius: 0.13
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
@@ -539,23 +537,6 @@ MonoBehaviour:
   lowerLookLimit: -70
   POV: 60
   fixedCameraDistance: 1.3
---- !u!114 &991449620581991127
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5467785558005741727}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69e9008024643cb4290c3b5b3b77c062, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerNameHandler
-  _nameText: {fileID: 3482733297238578991}
-  _PlayerName:
-    _length: 0
-    _data:
-      Data: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!114 &3118718109591380497
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -593,9 +574,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerUI
   worldCanvas: {fileID: 8712656973862017531}
   worldHPSlider: {fileID: 3263538572913643673}
-  localStaminaSlider: {fileID: 0}
-  bloodImage: {fileID: 0}
-  fadeSpeed: 1.5
+  worldNameText: {fileID: 3482733297238578991}
+  _PlayerName:
+    _length: 0
+    _data:
+      Data: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 --- !u!114 &515688232855161707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -611,6 +594,7 @@ MonoBehaviour:
   HandOffset: {fileID: 6982646204781210982}
   DropPos: {fileID: 7370576557423903618}
   equippedGun: {fileID: 0}
+  GunDropPending: 0
   meleeInSlot: {fileID: 0}
   pistolAmmoReserve: 100
   rifleAmmoReserve: 400
@@ -948,7 +932,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7490820596357379581, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_Height
-      value: 0.73931646
+      value: 0.5929127
       objectReference: {fileID: 0}
     - target: {fileID: 7490820596357379581, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_Radius
@@ -960,7 +944,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7490820596357379581, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_Center.y
-      value: 0.3386178
+      value: 0.4118197
       objectReference: {fileID: 0}
     - target: {fileID: 7561838174981495879, guid: 64db8d48fab1ceb43a8ee5d52643029a, type: 3}
       propertyPath: m_LocalPosition.x
