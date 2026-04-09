@@ -55,9 +55,14 @@ public class MouseLook : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.L))
         {
-            _isCursorLocked = !_isCursorLocked;
-            UpdateCursorState();
+            SetCursorLocked(!_isCursorLocked);
         }
+    }
+
+    public void SetCursorLocked(bool locked)
+    {
+        _isCursorLocked = locked;
+        UpdateCursorState();
     }
 
     public override void FixedUpdateNetwork()

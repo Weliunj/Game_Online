@@ -5,7 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class RoomManager : MonoBehaviour
 {
-    private NetworkRunner _runner; 
+    private NetworkRunner _runner;
+    private bool _isJoining;
 
     [Header("UI Setup")]
     public TMP_InputField playerNameInput;
@@ -29,7 +30,9 @@ public class RoomManager : MonoBehaviour
     }
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) && menuPanel != null && menuPanel.activeSelf)
+        if ((_isJoining == false) &&
+            menuPanel != null && menuPanel.activeSelf &&
+            (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             // Gọi hàm JoinOrCreateRoom mà bạn đã viết
             JoinOrCreateRoom();
@@ -37,54 +40,84 @@ public class RoomManager : MonoBehaviour
     }
     public async void JoinOrCreateRoom()
     {
-        LocalPlayerName = !string.IsNullOrEmpty(playerNameInput.text) 
-            ? playerNameInput.text 
-            : "Guest_" + Random.Range(100, 999);
+        if (_isJoining)
+            return;
 
-        string finalRoomName = string.IsNullOrEmpty(roomNameInput.text) 
-            ? "Public_Lobby" 
-            : roomNameInput.text;
-
-        if (_runner == null)
+        _isJoining = true;
+        try
         {
+            LocalPlayerName = !string.IsNullOrEmpty(playerNameInput.text) 
+                ? playerNameInput.text.Trim() 
+                : "Guest_" + Random.Range(100, 999);
+
+            string finalRoomName = string.IsNullOrEmpty(roomNameInput.text) 
+                ? "Public_Lobby" 
+                : roomNameInput.text;
+
+            if (_runner != null)
+            {
+                if (_runner.IsRunning)
+                {
+                    Debug.LogWarning("RoomManager: Runner đang chạy, không thể bắt đầu lại.");
+                    return;
+                }
+
+                Destroy(_runner);
+                _runner = null;
+            }
+
             _runner = gameObject.AddComponent<NetworkRunner>();
             _runner.ProvideInput = true;
-        }
 
-        var result = await _runner.StartGame(new StartGameArgs()
-        {
-            GameMode = GameMode.Shared,
-            SessionName = finalRoomName, 
-            Scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex),
-            SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
-        });
-
-        if (result.Ok)
-        {
-            // Fix: Dùng dấu ngoặc để cả 2 dòng đều chạy khi kết nối OK
-            if (menuPanel != null) menuPanel.SetActive(false);
-            if (hubPanel != null) hubPanel.SetActive(true);
-
-            await System.Threading.Tasks.Task.Delay(100); 
-
-            if (_runner.IsRunning)
+            var sceneManager = gameObject.GetComponent<NetworkSceneManagerDefault>();
+            if (sceneManager == null)
             {
-                float x = Random.Range(-50f, 50f);
-                float z = Random.Range(-50f, 50f);
-                var spawned = _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 5, z), Quaternion.identity, _runner.LocalPlayer);
+                sceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>();
+            }
 
-                if (spawned != null && firstJoinAsMannequin && CountActivePlayers(_runner) <= 1)
+            var result = await _runner.StartGame(new StartGameArgs()
+            {
+                GameMode = GameMode.Shared,
+                SessionName = finalRoomName, 
+                Scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex),
+                SceneManager = sceneManager
+            });
+
+            if (result.Ok)
+            {
+                // Fix: Dùng dấu ngoặc để cả 2 dòng đều chạy khi kết nối OK
+                if (menuPanel != null) menuPanel.SetActive(false);
+                if (hubPanel != null) hubPanel.SetActive(true);
+
+                await System.Threading.Tasks.Task.Delay(100); 
+
+                if (_runner.IsRunning)
                 {
-                    var movement = spawned.GetComponent<PlayerMovement>();
-                    if (movement != null) movement.enabled = false;
+                    float x = Random.Range(-50f, 50f);
+                    float z = Random.Range(-50f, 50f);
+                    var spawned = _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 5, z), Quaternion.identity, _runner.LocalPlayer);
 
-                    var combat = spawned.GetComponent<PlayerCombat>();
-                    if (combat != null) combat.enabled = false;
+                    if (spawned != null && firstJoinAsMannequin && CountActivePlayers(_runner) <= 1)
+                    {
+                        var movement = spawned.GetComponent<PlayerMovement>();
+                        if (movement != null) movement.enabled = false;
 
-                    var look = spawned.GetComponent<MouseLook>();
-                    if (look != null) look.enabled = false;
+                        var combat = spawned.GetComponent<PlayerCombat>();
+                        if (combat != null) combat.enabled = false;
+
+                        var look = spawned.GetComponent<MouseLook>();
+                        if (look != null) look.enabled = false;
+                    }
                 }
             }
+            else
+            {
+                Debug.LogError($"RoomManager: StartGame thất bại - {result.ShutdownReason}");
+            }
+        }
+        finally
+        {
+            _isJoining = false;
         }
     }
 

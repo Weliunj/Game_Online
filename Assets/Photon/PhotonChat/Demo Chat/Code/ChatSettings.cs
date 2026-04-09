@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using UnityEngine;
 
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,6 +9,12 @@ using UnityEditor;
 
 namespace Photon.Chat.DemoChat
 {
+    /// <summary>
+    /// Utility class to provide an instance with the Chat AppId to use by the demo. Can use PUN PhotonServerSettings or work as standalone.
+    /// </summary>
+    /// <remarks>
+    /// See the Instance getter for the different implementations (with and without PUN).
+    /// </remarks>
     public class ChatSettings : ScriptableObject
     {
         [Tooltip("Your Chat AppId from Photon Dashboard")]
@@ -25,12 +32,24 @@ namespace Photon.Chat.DemoChat
         {
             get
             {
+                #if PUN_2_OR_NEWER
+                if (instance == null)
+                {
+                    instance = ScriptableObject.CreateInstance<ChatSettings>();
+                }
+
+                instance.AppId = Photon.Pun.PhotonNetwork.PhotonServerSettings.AppSettings.AppIdChat;
+                return instance;
+
+                #else
+
                 if (instance == null)
                 {
                     instance = Load();
                 }
 
                 return instance;
+                #endif
             }
         }
 
