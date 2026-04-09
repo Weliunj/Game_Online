@@ -127,7 +127,7 @@ public class ChatUI : MonoBehaviour
 
     public void AddMessageToUI(string sender, string msg, bool isPrivate = false)
     {
-        string color = isPrivate ? "<color=magenta>" : "<color=white>";
+        string color = isPrivate ? "<color=red>" : "<color=white>";
         string prefix = isPrivate ? "[Private] " : "";
         chatContent.text += $"{color}{prefix}<b>{sender}:</b> {msg}</color>\n";
     }
