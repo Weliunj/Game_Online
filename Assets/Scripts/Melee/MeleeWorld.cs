@@ -1,63 +1,55 @@
 using UnityEngine;
 using Fusion;
+using System.Collections.Generic;
 
-public class GunWorld : NetworkBehaviour
+public class MeleeWorld : NetworkBehaviour
 {
-    public static readonly System.Collections.Generic.List<GunWorld> AllGuns = new();
+    public static readonly List<MeleeWorld> AllMelees = new();
 
+    [Header("Components")]
     public Rigidbody rb;
-    public GameObject firePos;
     private Collider[] colliders;
-    
+
     [Networked] public NetworkObject ownerObj { get; set; }
     [Networked] public bool hasOwner { get; set; }
     [Networked] public TickTimer pickupTimer { get; set; }
-    
-    // Đồng bộ vị trí vứt súng để các client khác thấy đúng khi không cầm
+
     [Networked] public Vector3 networkedPosition { get; set; }
     [Networked] public Quaternion networkedRotation { get; set; }
+    public bool useCustomOffset;
+    public Vector3 offSetPos;
+    public Quaternion offSetRot;
 
-    public GunData gunData;
-    public int ammoRemaining;
-
-    [Header("ZoomImg")]
-    public string zoomImgName = "WWII_Recon_A";
-    public GameObject zoomImg = null;
+    [Header("Melee Data")]
+    public MeleeData meleeData;
 
     public override void Spawned()
     {
-        if (!AllGuns.Contains(this))
-            AllGuns.Add(this);
+        if (!AllMelees.Contains(this))
+            AllMelees.Add(this);
 
         rb = GetComponent<Rigidbody>();
         colliders = GetComponents<Collider>();
 
-        if (gunData.hasZoomImg)
+        // Đồng bộ hóa trạng thái ban đầu
+        if (Object.HasStateAuthority && !hasOwner)
         {
-            GameObject hud = GameObject.Find("HUD Canvas"); 
-            if (hud != null)
-            {
-                Transform child = hud.transform.Find("ZoomImg/" + zoomImgName);
-                if (child != null) zoomImg = child.gameObject;
-            }
+            networkedPosition = transform.position;
+            networkedRotation = transform.rotation;
         }
-
-        // Chỉ State Authority mới set đạn ban đầu
-        if (Object.HasStateAuthority && ammoRemaining <= 0 && gunData != null)
-            ammoRemaining = gunData.magSize;
     }
 
     public override void FixedUpdateNetwork()
     {
-        // Kiểm tra nếu chủ sở hữu thoát game (NetworkObject bị Destroy)
         if (Object.HasStateAuthority)
         {
+            // Kiểm tra nếu chủ sở hữu thoát game
             if (hasOwner && (ownerObj == null || !ownerObj.IsValid))
             {
                 RequestDrop(transform.position, transform.rotation);
             }
-            
-            // Nếu không có chủ, cập nhật vị trí networked để các máy khác đồng bộ
+
+            // Đồng bộ vị trí khi nằm trên đất
             if (!hasOwner)
             {
                 networkedPosition = transform.position;
@@ -70,9 +62,9 @@ public class GunWorld : NetworkBehaviour
     {
         if (hasOwner && ownerObj != null && ownerObj.IsValid)
         {
+            // Kiểm tra trạng thái pending từ PlayerCombat (tương tự GunWorld)
             var combat = ownerObj.GetComponent<PlayerCombat>();
-            // Đang vứt súng: RPC đã null equippedGun nhưng hasOwner có thể chưa kịp false → không gắn lại tay
-            if (combat != null && combat.GunDropPending)
+            if (combat != null && combat.MeleeDropPending) 
             {
                 DetachFromHandLocal();
                 return;
@@ -82,22 +74,20 @@ public class GunWorld : NetworkBehaviour
         else
         {
             DetachFromHandLocal();
-            // Nếu không có chủ, ép vị trí về đúng vị trí mạng (nếu không dùng NetworkTransform)
             if (!Object.HasStateAuthority)
             {
                 transform.position = networkedPosition;
                 transform.rotation = networkedRotation;
             }
 
-                // Bật lại mesh cho súng khi nó rớt dưới đất (không có chủ)
-                foreach (var r in GetComponentsInChildren<Renderer>())
-                {
-                    r.enabled = true;
-                }
+            // Hiện lại vũ khí nếu rơi xuống đất
+            foreach (var r in GetComponentsInChildren<Renderer>())
+            {
+                r.enabled = true;
+            }
         }
     }
 
-    // Đổi thành OnTriggerEnter để nhạy hơn và tránh lỗi vật lý đẩy Player
     private void OnTriggerEnter(Collider other)
     {
         if (!Object.HasStateAuthority || hasOwner) return;
@@ -107,26 +97,15 @@ public class GunWorld : NetworkBehaviour
         {
             NetworkObject playerNetObj = other.GetComponent<NetworkObject>();
             PlayerCombat combat = other.GetComponent<PlayerCombat>();
-            
-            if (playerNetObj != null && combat != null && !PlayerAlreadyHasGun(playerNetObj))
+
+            // Kiểm tra nếu người chơi chưa có vũ khí cận chiến
+            if (playerNetObj != null && combat != null && combat.meleeInSlot == null)
             {
                 hasOwner = true;
                 ownerObj = playerNetObj;
+                combat.meleeInSlot = meleeData; // Gán dữ liệu vào slot cận chiến
             }
         }
-    }
-
-    private bool PlayerAlreadyHasGun(NetworkObject playerNetObj)
-    {
-        for (int i = 0; i < AllGuns.Count; i++)
-        {
-            var gun = AllGuns[i];
-            if (gun == null) continue;
-            if (gun == this) continue;
-            if (gun.hasOwner && gun.ownerObj == playerNetObj)
-                return true;
-        }
-        return false;
     }
 
     private void AttachToHandLocal()
@@ -134,45 +113,48 @@ public class GunWorld : NetworkBehaviour
         PlayerCombat combat = ownerObj.GetComponent<PlayerCombat>();
         if (combat == null || combat.HandOffset == null) return;
 
-        if (rb != null)
-        {
-            rb.isKinematic = true;
-        }
+        if (rb != null) rb.isKinematic = true;
 
         if (colliders != null)
         {
-            foreach (var c in colliders)
-                c.enabled = false;
+            foreach (var c in colliders) c.enabled = false;
         }
 
         if (transform.parent != combat.HandOffset.transform)
         {
             transform.SetParent(combat.HandOffset.transform, false);
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            if (useCustomOffset)
+            {
+                transform.localPosition = offSetPos;
+                transform.localRotation = offSetRot;
+            }
+            else
+            {
+                transform.localPosition = Vector3.zero;
+                transform.localRotation = Quaternion.identity;
+            }
         }
     }
 
     private void DetachFromHandLocal()
     {
-        if (transform.parent != null)
-        {
-            var combat = transform.parent.GetComponentInParent<PlayerCombat>();
-            if (combat != null && combat.equippedGun == this)
-                combat.equippedGun = null;
-        }
-
         if (transform.parent == null) return;
+
+        // Xóa dữ liệu trong PlayerCombat khi vứt
+        var combat = transform.parent.GetComponentInParent<PlayerCombat>();
+        if (combat != null)
+        {
+            if (combat.meleeInSlot == meleeData) combat.meleeInSlot = null;
+            if (combat.equippedMelee == this) combat.equippedMelee = null;
+        }
 
         transform.SetParent(null);
 
-        if (rb != null)
-            rb.isKinematic = false;
+        if (rb != null) rb.isKinematic = false;
 
         if (colliders != null)
         {
-            foreach (var c in colliders)
-                c.enabled = true;
+            foreach (var c in colliders) c.enabled = true;
         }
     }
 
@@ -182,7 +164,7 @@ public class GunWorld : NetworkBehaviour
 
         hasOwner = false;
         ownerObj = null;
-        pickupTimer = TickTimer.CreateFromSeconds(Runner, 1.0f); // Tăng thời gian để tránh nhặt lại ngay
+        pickupTimer = TickTimer.CreateFromSeconds(Runner, 1.5f); 
 
         transform.position = position;
         transform.rotation = rotation;
@@ -192,7 +174,7 @@ public class GunWorld : NetworkBehaviour
             rb.isKinematic = false;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
-            rb.AddForce(transform.forward * 3f, ForceMode.Impulse);
+            rb.AddForce(transform.forward * 2f, ForceMode.Impulse);
         }
     }
 
@@ -204,6 +186,6 @@ public class GunWorld : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        AllGuns.Remove(this);
+        AllMelees.Remove(this);
     }
 }

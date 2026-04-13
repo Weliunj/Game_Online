@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: M1911
   weaponIcon: {fileID: 0}
-  damage: 5
-  fireRate: 0.3
+  damage: 15
+  fireRate: 0.15
   range: 150
   magSize: 15
   reloadTime: 2
   ZoomMode: 0
-  ZoomImg: {fileID: 0}
+  hasZoomImg: 0
   DivmouseSensitivity: 3
   cameraholder: {x: 0.4, y: 0.05, z: 0}
   DistanceCinema: 0.3

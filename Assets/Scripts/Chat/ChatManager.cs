@@ -7,7 +7,7 @@ using Photon.Pun; // Cần thiết để lấy NickName từ PUN 2
 public class ChatManager : MonoBehaviour, IChatClientListener
 {
     // LỖI 1: Thiếu Instance để ChatUI truy cập
-    public static ChatManager Instance;
+    public static ChatManager Instance { get; private set; }
     
     public ChatUI chatUI;
     private ChatClient chatClient;
@@ -20,7 +20,15 @@ public class ChatManager : MonoBehaviour, IChatClientListener
     private void Awake()
     {
         // Khởi tạo Singleton
-        Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
     void Start()
@@ -116,6 +124,12 @@ public class ChatManager : MonoBehaviour, IChatClientListener
 
     public void OnGetMessages(string channelName, string[] senders, object[] messages)
     {
+        if (chatUI == null)
+        {
+            Debug.LogWarning("ChatManager: chatUI chưa được gán, không thể hiển thị tin nhắn.");
+            return;
+        }
+
         for (int i = 0; i < senders.Length; i++)
         {
             // Hiển thị lên giao diện thông qua ChatUI
@@ -125,6 +139,12 @@ public class ChatManager : MonoBehaviour, IChatClientListener
 
     public void OnPrivateMessage(string sender, object message, string channelName)
     {
+        if (chatUI == null)
+        {
+            Debug.LogWarning("ChatManager: chatUI chưa được gán, không thể hiển thị tin nhắn riêng tư.");
+            return;
+        }
+
         // Hiển thị tin nhắn riêng tư
         chatUI.AddMessageToUI(sender, message.ToString(), true);
     }
@@ -143,5 +163,19 @@ public class ChatManager : MonoBehaviour, IChatClientListener
     public void OnUnsubscribed(string[] channels) {}
     public void OnUserSubscribed(string channel, string user) {}
     public void OnUserUnsubscribed(string channel, string user) {}
-    public void DebugReturn(DebugLevel level, string message) {}
+    public void DebugReturn(DebugLevel level, string message)
+    {
+        switch (level)
+        {
+            case DebugLevel.ERROR:
+                Debug.LogError($"Photon Chat: {message}");
+                break;
+            case DebugLevel.WARNING:
+                Debug.LogWarning($"Photon Chat: {message}");
+                break;
+            default:
+                Debug.Log($"Photon Chat: {message}");
+                break;
+        }
+    }
 }

@@ -7,6 +7,7 @@ public class StatsHandler : NetworkBehaviour
 {
     private ChangeDetector _changes;
     private bool _deathHandled;
+    [Networked] public int Score { get; set; }
 
     [Header("HP Settings")]
     [Networked] public bool IsDead { get; set; }
@@ -100,12 +101,23 @@ public class StatsHandler : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_TakeDamage(float damage)
+    public void RPC_TakeDamage(float damage, PlayerRef killer)
     {
         if (Object.HasStateAuthority && !IsDead)
         {
             NetworkHealth -= damage;
             NetworkHealth = Mathf.Max(0, NetworkHealth);
+            
+            if (NetworkHealth <= 0)
+            {
+                IsDead = true;
+                // Cộng điểm cho người giết
+                if (Runner.TryGetPlayerObject(killer, out var killerObj))
+                {
+                    var killerStats = killerObj.GetComponent<StatsHandler>();
+                    if (killerStats != null) killerStats.Score += 100;
+                }
+            }
             RPC_ShowBloodEffect(Object.InputAuthority);
         }
     }
@@ -147,7 +159,7 @@ public class StatsHandler : NetworkBehaviour
         var combat = GetComponent<PlayerCombat>();
         if (combat != null)
         {
-            combat.DropGunOnDeath();
+            combat.DropWeaponsOnDeath();
             combat.enabled = false;
         }
         

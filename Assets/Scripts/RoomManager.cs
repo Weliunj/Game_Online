@@ -93,8 +93,8 @@ public class RoomManager : MonoBehaviour
 
                 if (_runner.IsRunning)
                 {
-                    float x = Random.Range(-50f, 50f);
-                    float z = Random.Range(-50f, 50f);
+                    float x = Random.Range(-70f, 70f);
+                    float z = Random.Range(-70f, 70f);
                     var spawned = _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 5, z), Quaternion.identity, _runner.LocalPlayer);
 
                     if (spawned != null && firstJoinAsMannequin && CountActivePlayers(_runner) <= 1)

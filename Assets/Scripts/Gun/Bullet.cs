@@ -75,7 +75,7 @@ public class Bullet : NetworkBehaviour
         {
             if (!part.rootStats.IsDead)
             {
-                part.OnHit(_damage);
+                part.OnHit(_damage, _shooterRef);
                 Debug.Log($"[Hit] {other.name} - Damage: {_damage}");
             }
         }

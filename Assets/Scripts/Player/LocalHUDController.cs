@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using Fusion;
+using System;
 
 public class LocalHUDController : MonoBehaviour
 {
@@ -28,6 +29,7 @@ public class LocalHUDController : MonoBehaviour
     public TextMeshProUGUI PlayerisSprintingText;
     public TextMeshProUGUI PlayerisCrouchingText;
 
+    public TextMeshProUGUI MeleeNameText;
     public TextMeshProUGUI GunNameText;
     public TextMeshProUGUI GunAmmoText;
     public TextMeshProUGUI GunDamageText;
@@ -35,6 +37,7 @@ public class LocalHUDController : MonoBehaviour
     public TextMeshProUGUI GunRangeText;
     public TextMeshProUGUI GunMagSizeText;
     public TextMeshProUGUI GunReloadTimeText;
+    public TextMeshProUGUI GunReloadingText;
     public TextMeshProUGUI GunisAutomaticText;
     
     public TextMeshProUGUI PistolAmmoText;
@@ -46,6 +49,7 @@ public class LocalHUDController : MonoBehaviour
 
     private void Awake()
     {
+        DebugUI.SetActive(false);
         Instance = this;
         if (bloodImage != null)
         {
@@ -73,11 +77,8 @@ public class LocalHUDController : MonoBehaviour
             ToggleDebugUI();
         }
 
-        // Chỉ cập nhật thông số khi DebugUI đang hiện để tiết kiệm hiệu năng
-        if (DebugUI != null && DebugUI.activeSelf)
-        {
+        // Chỉ cập nhật thông số khi DebugUI đang hiện để tiết kiệm hiệu năn
             UpdateDebugUI();
-        }
     }
 
     private void ToggleDebugUI()
@@ -142,16 +143,21 @@ public class LocalHUDController : MonoBehaviour
             SetText(PlayerStaminaText, "Stamina: N/A");
             SetText(PlayerisSprintingText, "Sprinting: N/A");
             SetText(PlayerisCrouchingText, "Crouching: N/A");
-            SetText(PistolAmmoText, "PistolReserve: -");
-            SetText(RifleAmmoText, "RifleReserve: -");
-            SetText(SniperAmmoText, "SniperReserve: -");
+            SetText(PistolAmmoText, "PistolAmmo: -");
+            SetText(RifleAmmoText, "RifleAmmo: -");
+            SetText(SniperAmmoText, "SniperAmmo: -");
+            SetText(MeleeNameText, "Melee: None");
+            if (MeleeNameText != null) MeleeNameText.color = Color.white;
+            
             SetText(GunNameText, "Gun: None");
+            if (GunNameText != null) GunNameText.color = Color.white;
             SetText(GunAmmoText, "Ammo: -");
             SetText(GunDamageText, "Damage: -");
             SetText(GunFireRateText, "FireRate: -");
             SetText(GunRangeText, "Range: -");
             SetText(GunMagSizeText, "Mag: -");
             SetText(GunReloadTimeText, "Reload: -");
+            SetText(GunReloadingText, "");
             SetText(GunisAutomaticText, "Auto: -");
             return;
         }
@@ -171,9 +177,21 @@ public class LocalHUDController : MonoBehaviour
         SetText(PlayerisCrouchingText, $"Crouching: {(_target.IsCrouching ? "Yes" : "No")}");
 
         var combat = _target.GetComponent<PlayerCombat>();
-        SetText(PistolAmmoText, combat != null ? $"PistolReserve: {combat.pistolAmmoReserve}" : "PistolReserve: -");
-        SetText(RifleAmmoText, combat != null ? $"RifleReserve: {combat.rifleAmmoReserve}" : "RifleReserve: -");
-        SetText(SniperAmmoText, combat != null ? $"SniperReserve: {combat.sniperAmmoReserve}" : "SniperReserve: -");
+        SetText(PistolAmmoText, combat != null ? $"PistolAmmo: {combat.pistolAmmoReserve}" : "PistolAmmo: -");
+        SetText(RifleAmmoText, combat != null ? $"RifleAmmo: {combat.rifleAmmoReserve}" : "RifleAmmo: -");
+        SetText(SniperAmmoText, combat != null ? $"SniperAmmo: {combat.sniperAmmoReserve}" : "SniperAmmo: -");
+
+        if (combat != null)
+        {
+            // Lấy tên vũ khí cận chiến hoặc báo Tay không
+            string meleeName = combat.meleeInSlot != null ? combat.meleeInSlot.WeaponName : (combat.FistInSlot != null ? combat.FistInSlot.WeaponName : "Fist");
+            SetText(MeleeNameText, $"Melee: {meleeName}");
+            
+            // Đổi màu text thành màu xanh lá nếu curSlot tương ứng được kích hoạt
+            if (MeleeNameText != null) MeleeNameText.color = combat.curSlot == 1 ? Color.green : Color.white;
+            if (GunNameText != null) GunNameText.color = combat.curSlot == 2 ? Color.green : Color.white;
+        }
+
         var gun = combat != null ? combat.equippedGun : null;
         if (gun == null || gun.gunData == null)
         {
@@ -188,9 +206,18 @@ public class LocalHUDController : MonoBehaviour
             return;
         }
 
+        if (combat != null && combat.IsReloading)
+        {
+            SetText(GunReloadingText, "Reloading...");
+        }
+        else
+        {
+            SetText(GunReloadingText, "");
+        }
+
         var data = gun.gunData;
         SetText(GunNameText, $"Gun: {data.weaponName}");
-        SetText(GunAmmoText, $"Ammo: {gun.ammoRemaining} / {data.magSize}");
+        SetText(GunAmmoText, $"Ammo: {gun.ammoRemaining} / {Convert.ToString(data.ammoType == AmmoType.Pistol ? combat.pistolAmmoReserve : data.ammoType == AmmoType.Rifle ? combat.rifleAmmoReserve : combat.sniperAmmoReserve)}");
         SetText(GunDamageText, $"Damage: {data.damage:0.##}");
         SetText(GunFireRateText, $"FireRate: {data.fireRate:0.###}");
         SetText(GunRangeText, $"Range: {data.range:0.##}");

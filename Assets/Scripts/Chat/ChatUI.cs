@@ -18,6 +18,8 @@ public class ChatUI : MonoBehaviour
     {
         sendButton.onClick.AddListener(OnSendButtonClicked);
         CloseChat();
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     private void Update()
@@ -91,6 +93,9 @@ public class ChatUI : MonoBehaviour
 
     private void CloseChat()
     {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    
         isChatting = false;
         isTypingPrivate = false;
 

@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 83b799a108e2e94479bf7fc785082694, type: 3}
-  m_Name: Fist
+  m_Name: Axe
   m_EditorClassIdentifier: Assembly-CSharp::MeleeData
-  WeaponName: Fist
+  WeaponName: Axe
   WeaponIcon: {fileID: 0}
-  damage: 5
-  staminaCost: 5
-  attackRate: 0.5
+  damage: 20
+  staminaCost: 25
+  attackRate: 1.4

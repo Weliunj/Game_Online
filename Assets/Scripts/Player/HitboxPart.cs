@@ -1,3 +1,4 @@
+using Fusion;
 using UnityEngine;
 
 public class HitboxPart : MonoBehaviour
@@ -12,9 +13,9 @@ public class HitboxPart : MonoBehaviour
             rootStats = GetComponentInParent<StatsHandler>();
         }
     }
-    public void OnHit(float baseDamage)
+    public void OnHit(float baseDamage, PlayerRef shooter) 
     {
         float finalDamage = baseDamage * damageMultiplier;
-        rootStats.RPC_TakeDamage(finalDamage);
+        rootStats.RPC_TakeDamage(finalDamage, shooter); // Truyền thêm người bắn
     }
 }

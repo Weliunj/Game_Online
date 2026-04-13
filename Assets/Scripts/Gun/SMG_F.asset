@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GunData
   weaponName: SMG_F
   weaponIcon: {fileID: 0}
-  damage: 4
-  fireRate: 0.2
+  damage: 8
+  fireRate: 0.1
   range: 150
   magSize: 30
   reloadTime: 3

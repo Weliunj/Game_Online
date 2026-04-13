@@ -28,7 +28,7 @@ public class FireZone : MonoBehaviour
                 if (Time.time >= _nextEffectTime && stats.NetworkHealth > 0)
                 {
                     // Gọi RPC có sẵn trong StatsHandler để hiện hiệu ứng trên máy nạn nhân
-                    stats.RPC_TakeDamage(0); 
+                    stats.RPC_TakeDamage(0, PlayerRef.None); 
                     _nextEffectTime = Time.time + effectInterval;
                 }
             }
