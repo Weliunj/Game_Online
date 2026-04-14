@@ -21,7 +21,7 @@ public class GunWorld : NetworkBehaviour
     public int ammoRemaining;
 
     [Header("ZoomImg")]
-    public string zoomImgName = "WWII_Recon_A";
+    public string zoomImgName = "";
     public GameObject zoomImg = null;
 
     public override void Spawned()

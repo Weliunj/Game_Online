@@ -85,8 +85,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.06793213, y: 0.20500103, z: 0.2694664}
-  m_Center: {x: -0.0009384155, y: -0.03157316, z: 0.017915726}
+  m_Size: {x: 0.090031624, y: 0.20500103, z: 0.2694664}
+  m_Center: {x: 0.0027446747, y: -0.03157316, z: 0.017915726}
 --- !u!114 &6317419313474130537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -107,6 +107,8 @@ MonoBehaviour:
   _networkedRotation: {x: 0, y: 0, z: 0, w: 0}
   gunData: {fileID: 11400000, guid: 5148db41f26aef94eb2816cbff0ddebe, type: 2}
   ammoRemaining: 15
+  zoomImgName: 
+  zoomImg: {fileID: 0}
 --- !u!114 &3836003795017431533
 MonoBehaviour:
   m_ObjectHideFlags: 0

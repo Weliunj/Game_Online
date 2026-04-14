@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GunData
   weaponName: WWII_Recon
   weaponIcon: {fileID: 0}
-  damage: 40
+  damage: 35
   fireRate: 2.3
   range: 600
   magSize: 10
   reloadTime: 7
   ZoomMode: 0
   hasZoomImg: 1
-  DivmouseSensitivity: 5
-  cameraholder: {x: 0.4, y: 0.05, z: 6}
+  DivmouseSensitivity: 6.5
+  cameraholder: {x: 0.4, y: 0.05, z: 1}
   DistanceCinema: 0.2
-  POV: 20
+  POV: 10
   isAutomatic: 0
   ammoType: 2

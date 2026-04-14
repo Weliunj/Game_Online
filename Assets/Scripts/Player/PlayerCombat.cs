@@ -5,6 +5,7 @@ using UnityEditor;
 
 public class PlayerCombat : NetworkBehaviour
 {
+    private StatsHandler stats;
     public GameObject HandOffset;
     public GameObject DropPos;
 
@@ -47,6 +48,7 @@ public class PlayerCombat : NetworkBehaviour
 
     public override void Spawned()
     {
+        stats = GetComponent<StatsHandler>();
         animator = GetComponentInChildren<Animator>();
         mouseLook = GetComponent<MouseLook>();
 
@@ -149,11 +151,13 @@ public class PlayerCombat : NetworkBehaviour
         {
             if (curSlot == 2 && equippedGun != null)
             {
+                stats.IsDancing = false;
                 GunDropPending = true;
                 RequestDropCurrentGun();
             }
             else if (curSlot == 1 && equippedMelee != null)
             {
+                stats.IsDancing = false;
                 MeleeDropPending = true;
                 RequestDropCurrentMelee();
             }
@@ -164,6 +168,14 @@ public class PlayerCombat : NetworkBehaviour
 
     private void HandleInput()
     {
+        // KHÔNG cho phép nhận Input đánh/bắn nếu chuột đang được mở (hiện con trỏ)
+        if (mouseLook != null && !mouseLook.IsCursorLocked)
+        {
+            IsShooting = false;
+            IsZooming = false;
+            return;
+        }
+
         if (curSlot == 2)
         {
             if (equippedGun == null || isReloading) 
@@ -179,6 +191,8 @@ public class PlayerCombat : NetworkBehaviour
             {
                 if (equippedGun.ammoRemaining > 0) 
                 {
+                    stats.IsDancing = false;
+                    if (mouseLook != null) mouseLook.AlignPlayerWithCamera();
                     Shoot();
                 }
                 else 
@@ -193,8 +207,17 @@ public class PlayerCombat : NetworkBehaviour
 
             // Zoom logic
             IsZooming = Input.GetMouseButton(1);
+            if (IsZooming)  
+            { 
+                stats.IsDancing = false; 
+                if (mouseLook != null) mouseLook.AlignPlayerWithCamera();
+            }
 
-            if (Input.GetKeyDown(KeyCode.R)) StartCoroutine(ReloadRoutine());
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                stats.IsDancing = false;
+                StartCoroutine(ReloadRoutine());
+            }
         }
         else if (curSlot == 1)
         {
@@ -205,6 +228,8 @@ public class PlayerCombat : NetworkBehaviour
             // Đổi thành GetMouseButton(0) để có thể giữ chuột chém liên tục, tránh lỗi hụt nhịp click
             if (Input.GetMouseButton(0) && Time.time > nextMeleeTime)
             {
+                stats.IsDancing = false;
+                if (mouseLook != null) mouseLook.AlignPlayerWithCamera();
                 MeleeAttack();
             }
         }

@@ -5,6 +5,7 @@ public class PlayerMovement : NetworkBehaviour
 {
     private CharacterController characterController;
     private StatsHandler stats;
+    private MouseLook mouseLook;
 
     [Header("Movement Settings")]
     [HideInInspector]
@@ -28,6 +29,7 @@ public class PlayerMovement : NetworkBehaviour
 
     public override void Spawned()
     {
+        mouseLook = GetComponent<MouseLook>();
         animator = GetComponentInChildren<Animator>();
         characterController = GetComponent<CharacterController>();
         stats = GetComponent<StatsHandler>();
@@ -112,6 +114,9 @@ public class PlayerMovement : NetworkBehaviour
         // 6. NHẢY & TRỌNG LỰC (Giữ nguyên, lưu ý: thường không cho nhảy khi đang ngồi)
         if (Input.GetButton("Jump") && isGrounded && !stats.IsCrouching && !isZooming && stats.NetworkStamina >= jumpStaminaCost)
         {
+            stats.IsDancing = false;
+            mouseLook.AlignPlayerWithCamera();
+
             jumped = true;
             playerVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
             stats.ConsumingStamina(jumpStaminaCost);
@@ -124,6 +129,12 @@ public class PlayerMovement : NetworkBehaviour
         playerVelocity.y += gravityValue * Runner.DeltaTime;
         Vector3 finalMove = (move * currSpeed) + Vector3.up * playerVelocity.y;
         characterController.Move(finalMove * Runner.DeltaTime);
+
+        if(move.magnitude > 0.1f)
+        {
+            stats.IsDancing = false;
+            mouseLook.AlignPlayerWithCamera();
+        }
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.All)]

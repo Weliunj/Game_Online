@@ -24,6 +24,9 @@ public class RoomManager : MonoBehaviour
 
     private void Start()
     {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
         // Vì RoomManager là MonoBehaviour, dùng Start để khởi tạo UI
         if (menuPanel != null) menuPanel.SetActive(true);
         if (hubPanel != null) hubPanel.SetActive(false);

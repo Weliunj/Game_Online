@@ -10,6 +10,7 @@ public class MouseLook : NetworkBehaviour
     public GameObject spine;
     public CinemachineCamera _vcam;
     private CinemachineThirdPersonFollow _tpFollow;
+    private StatsHandler stats;
 
     [Header("Look Settings")]
     [Networked] public float _networkVerticalRotation { get; set; }
@@ -23,12 +24,14 @@ public class MouseLook : NetworkBehaviour
     public float fixedCameraDistance = 1.3f; 
 
     private float _verticalRotation = 0f;
+    private float _horizontalRotation = 0f;
     private bool _isCursorLocked = true;
+    public bool IsCursorLocked => _isCursorLocked; // Thêm biến public để các script khác kiểm tra
 
     public override void Spawned()
     {
         if (!HasInputAuthority) return;
-
+        stats = GetComponent<StatsHandler>();
         _cameraHolderTransform = transform.Find(cameraHolderName);
         _vcam = FindFirstObjectByType<CinemachineCamera>();
 
@@ -56,6 +59,7 @@ public class MouseLook : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.L))
         {
             SetCursorLocked(!_isCursorLocked);
+            Debug.Log($"[MouseLook] Trạng thái khóa chuột (Cursor Locked): {_isCursorLocked}");
         }
     }
 
@@ -63,6 +67,15 @@ public class MouseLook : NetworkBehaviour
     {
         _isCursorLocked = locked;
         UpdateCursorState();
+    }
+
+    public void AlignPlayerWithCamera()
+    {
+        if (_horizontalRotation != 0f)
+        {
+            transform.Rotate(Vector3.up * _horizontalRotation);
+            _horizontalRotation = 0f;
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -77,11 +90,22 @@ public class MouseLook : NetworkBehaviour
 
         _networkVerticalRotation = _verticalRotation;
 
-        // 2. XOAY CHUỘT NGANG
+        // 2. XOAY CHUỘT NGANG (Horizontal)
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Runner.DeltaTime;
-        transform.Rotate(Vector3.up * mouseX);
+
+        bool isFreeLook = stats.IsDancing;
+        if (!isFreeLook)
+        {
+            // CHẾ ĐỘ THÔNG THƯỜNG: Xoay toàn bộ Player (Thân người xoay theo chuột)
+            transform.Rotate(Vector3.up * mouseX);
+            // Trả Rotation cục bộ của CameraHolder về 0 để camera luôn nhìn thẳng theo người khi hết Free Look
+            _horizontalRotation = 0f;
+        }
+        else
+        {
+            _horizontalRotation += mouseX;
+        }
         
-        // ĐÃ XÓA PHẦN CODE ZOOM Ở ĐÂY
     }
 
     void LateUpdate()
@@ -94,7 +118,7 @@ public class MouseLook : NetworkBehaviour
         
         if (HasInputAuthority && _cameraHolderTransform != null)
         {
-            _cameraHolderTransform.localRotation = Quaternion.Euler(_verticalRotation, 0, 0);
+            _cameraHolderTransform.localRotation = Quaternion.Euler(_verticalRotation, _horizontalRotation, 0);
         }
     }
 
@@ -112,3 +136,4 @@ public class MouseLook : NetworkBehaviour
         }
     }
 }
+

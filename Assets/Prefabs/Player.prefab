@@ -404,6 +404,7 @@ GameObject:
   - component: {fileID: 3118718109591380497}
   - component: {fileID: 7234823233390691569}
   - component: {fileID: 515688232855161707}
+  - component: {fileID: 7593492894512135527}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -452,6 +453,7 @@ MonoBehaviour:
   - {fileID: 3118718109591380497}
   - {fileID: 7234823233390691569}
   - {fileID: 515688232855161707}
+  - {fileID: 7593492894512135527}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &6467244814416610502
 MonoBehaviour:
@@ -532,7 +534,7 @@ MonoBehaviour:
   spine: {fileID: 1298497975502935460}
   _vcam: {fileID: 0}
   __networkVerticalRotation: 0
-  mouseSensitivity: 120
+  mouseSensitivity: 90
   upperLookLimit: 55
   lowerLookLimit: -70
   POV: 60
@@ -561,6 +563,7 @@ MonoBehaviour:
   _NetworkMoveSpeed: 0
   _NetworkCrouchMove: 0
   _IsCrouching: 0
+  _IsDancing: 0
 --- !u!114 &7234823233390691569
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -596,6 +599,8 @@ MonoBehaviour:
   DropPos: {fileID: 7370576557423903618}
   equippedGun: {fileID: 0}
   GunDropPending: 0
+  equippedMelee: {fileID: 0}
+  MeleeDropPending: 0
   FistInSlot: {fileID: 11400000, guid: 9374714e3b7cb3e4b9df330205156bc8, type: 2}
   meleeInSlot: {fileID: 0}
   pistolAmmoReserve: 100
@@ -607,6 +612,18 @@ MonoBehaviour:
   _IsZooming: 0
   _curSlot: 0
   CameraHolder: {fileID: 3942646182165188719}
+--- !u!114 &7593492894512135527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5467785558005741727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f3e7602fa07c8946976a5b7a299a5c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DanceAct
 --- !u!1 &8264358661384262696
 GameObject:
   m_ObjectHideFlags: 0

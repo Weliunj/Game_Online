@@ -28,6 +28,7 @@ public class StatsHandler : NetworkBehaviour
     [Networked] public float NetworkMoveSpeed { get; set; }
     [Networked] public float NetworkCrouchMove { get; set; } // 0: Đứng im, 1: Di chuyển khi đang ngồi
     [Networked] public bool IsCrouching { get; set; }
+    [Networked] public bool IsDancing { get; set; }
 
     [Networked] public TickTimer LandingDelayTimer { get; set; }
     public bool IsLandingLocked => !LandingDelayTimer.ExpiredOrNotRunning(Runner);
