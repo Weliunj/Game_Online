@@ -1,7 +1,6 @@
 using Fusion;
 using UnityEngine;
 using System.Collections;
-using UnityEditor;
 
 public class PlayerCombat : NetworkBehaviour
 {
@@ -23,8 +22,16 @@ public class PlayerCombat : NetworkBehaviour
     public int pistolAmmoReserve = 15;
     public int rifleAmmoReserve = 60;
     public int sniperAmmoReserve = 10;
+    public int smgAmmoReserve = 100;
+    public int shotgunAmmoReserve = 20;
+
+    [Header("Aim Debug")]
+    public bool enableAimDebug = true;
+    private bool isAimHitPlayer = false;
 
     [Header("Gun Logic")]
+    public MeshRenderer Hat;
+    public SkinnedMeshRenderer body;
     [SerializeField] private GameObject bulletPrefab;
     private float nextShootTime = 0;
     private bool isReloading = false; // Biến local để khóa input
@@ -96,6 +103,22 @@ public class PlayerCombat : NetworkBehaviour
         // Zoom / camera chỉ áp dụng cho người chơi local (tránh dùng equippedGun sai trên proxy)
         if (!Object.HasInputAuthority) return;
 
+        if (equippedGun != null && curSlot == 2)
+        {
+            if (enableAimDebug)
+            {
+                EvaluateAimDebug();
+            }
+            else
+            {
+                UpdateCrosshairColor(false);
+            }
+        }
+        else
+        {
+            UpdateCrosshairColor(false);
+        }
+
         // Lerp camera position, FOV, sensitivity cho zoom mượt
         if (equippedGun != null && curSlot == 2) // Chỉ áp dụng zoom/hiển thị tâm ngắm khi đang cầm súng
         {
@@ -132,6 +155,13 @@ public class PlayerCombat : NetworkBehaviour
         SyncEquippedWeaponsCache();
         if (!HasInputAuthority) return;
 
+        if (equippedGun != null)
+        {
+            // Lấy tâm màn hình
+            Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+            // Vẽ tia màu xanh lá cây dài đúng bằng Range của súng
+            Debug.DrawRay(ray.origin, ray.direction * equippedGun.gunData.range, Color.green);
+        }
         // --- XỬ LÝ ĐỔI SLOT VŨ KHÍ ---
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
@@ -173,6 +203,7 @@ public class PlayerCombat : NetworkBehaviour
         {
             IsShooting = false;
             IsZooming = false;
+            ResetZoomRenderers();
             return;
         }
 
@@ -182,6 +213,7 @@ public class PlayerCombat : NetworkBehaviour
             {
                 IsShooting = false;
                 IsZooming = false;
+                ResetZoomRenderers();
                 return;
             }
 
@@ -211,6 +243,11 @@ public class PlayerCombat : NetworkBehaviour
             { 
                 stats.IsDancing = false; 
                 if (mouseLook != null) mouseLook.AlignPlayerWithCamera();
+                SetZoomRenderers(true);
+            }
+            else
+            {
+                SetZoomRenderers(false);
             }
 
             if (Input.GetKeyDown(KeyCode.R))
@@ -224,6 +261,7 @@ public class PlayerCombat : NetworkBehaviour
             // Đảm bảo cất súng thì sẽ không zoom hay bắn nạp đạn nữa
             IsShooting = false;
             IsZooming = false;
+            ResetZoomRenderers();
 
             // Đổi thành GetMouseButton(0) để có thể giữ chuột chém liên tục, tránh lỗi hụt nhịp click
             if (Input.GetMouseButton(0) && Time.time > nextMeleeTime)
@@ -233,6 +271,27 @@ public class PlayerCombat : NetworkBehaviour
                 MeleeAttack();
             }
         }
+    }
+
+    private void SetZoomRenderers(bool zooming)
+    {
+        if (!Object.HasInputAuthority || equippedGun == null || !equippedGun.gunData.hasZoomImg)
+            return;
+
+        var mode = zooming ? UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly : UnityEngine.Rendering.ShadowCastingMode.On;
+        if (Hat != null) Hat.shadowCastingMode = mode;
+        if (body != null) body.shadowCastingMode = mode;
+
+        var gun = equippedGun.transform;
+        foreach (var r in gun.GetComponentsInChildren<MeshRenderer>())
+        {
+            r.shadowCastingMode = mode;
+        }
+    }
+
+    private void ResetZoomRenderers()
+    {
+        SetZoomRenderers(false);
     }
 
     public void Shoot()
@@ -261,6 +320,50 @@ public class PlayerCombat : NetworkBehaviour
         return ray.GetPoint(range);
     }
 
+    private void EvaluateAimDebug()
+    {
+        isAimHitPlayer = false;
+
+        if (Camera.main == null || equippedGun == null)
+        {
+            UpdateCrosshairColor(false);
+            return;
+        }
+
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        float range = equippedGun.gunData.range;
+        int layerMask = ~LayerMask.GetMask("Fire");
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, range, layerMask))
+        {
+            if (hit.collider != null)
+            {
+                var hitbox = hit.collider.GetComponent<HitboxPart>() ?? hit.collider.GetComponentInParent<HitboxPart>();
+                var stats = hit.collider.GetComponent<StatsHandler>() ?? hit.collider.GetComponentInParent<StatsHandler>();
+
+                if (hitbox != null && hitbox.rootStats != null && !hitbox.rootStats.IsDead && hitbox.rootStats.Object.InputAuthority != Object.InputAuthority)
+                {
+                    isAimHitPlayer = true;
+                }
+                else if (stats != null && stats.Object.InputAuthority != Object.InputAuthority)
+                {
+                    isAimHitPlayer = true;
+                }
+            }
+        }
+
+        UpdateCrosshairColor(isAimHitPlayer);
+    }
+
+    private void UpdateCrosshairColor(bool hitPlayer)
+    {
+        if (LocalHUDController.Instance != null)
+        {
+            LocalHUDController.Instance.SetCrosshairColor(hitPlayer ? Color.red : Color.black);
+        }
+    }
+
     private void MeleeAttack()
     {
         // Ưu tiên dùng vũ khí nhặt được, nếu không có thì dùng tay không (FistInSlot)
@@ -284,7 +387,7 @@ public class PlayerCombat : NetworkBehaviour
 
         if (isWeapon)
         {
-            StartCoroutine(MeleeHitDelayRoutine(currentMelee, 0.3f));
+            StartCoroutine(MeleeHitDelayRoutine(currentMelee, 0.2f));
         }
         else
         {
@@ -309,7 +412,7 @@ public class PlayerCombat : NetworkBehaviour
         // --- DEBUG SPHERECAST ---
         Debug.DrawRay(ray.origin, ray.direction * range, Color.red, 2f);
 
-        RaycastHit[] hits = Physics.SphereCastAll(ray, 0.3f, range, layerMask);
+        RaycastHit[] hits = Physics.SphereCastAll(ray, 0.35f, range, layerMask);
 
         float closestDist = float.MaxValue;
         HitboxPart targetPart = null;
@@ -387,6 +490,8 @@ public class PlayerCombat : NetworkBehaviour
             AmmoType.Pistol => pistolAmmoReserve,
             AmmoType.Rifle => rifleAmmoReserve,
             AmmoType.Sniper => sniperAmmoReserve,
+            AmmoType.Smg => smgAmmoReserve,
+            AmmoType.Shotgun => shotgunAmmoReserve,
             _ => 0
         };
     }
@@ -396,6 +501,8 @@ public class PlayerCombat : NetworkBehaviour
         if (type == AmmoType.Pistol) pistolAmmoReserve -= amount;
         else if (type == AmmoType.Rifle) rifleAmmoReserve -= amount;
         else if (type == AmmoType.Sniper) sniperAmmoReserve -= amount;
+        else if (type == AmmoType.Smg) smgAmmoReserve -= amount;
+        else if (type == AmmoType.Shotgun) shotgunAmmoReserve -= amount;
     }
 
     public void DropWeaponsOnDeath()
@@ -426,7 +533,7 @@ public class PlayerCombat : NetworkBehaviour
             Vector3 shotDirection = (targetPoint - firePosition).normalized;
             
             Runner.Spawn(bulletPrefab, firePosition, Quaternion.LookRotation(shotDirection), shooter, (runner, obj) => {
-                obj.GetComponent<Bullet>().InitBullet(equippedGun.gunData.damage, shooter);
+                obj.GetComponent<Bullet>().InitBullet(equippedGun.gunData.damage, shooter, equippedGun.gunData.range);
             });
 
             Debug.DrawLine(firePosition, targetPoint, Color.yellow, 0.1f);

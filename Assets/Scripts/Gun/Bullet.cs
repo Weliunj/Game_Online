@@ -11,11 +11,15 @@ public class Bullet : NetworkBehaviour
     [Networked] private float _damage { get; set; }
     [Networked] private PlayerRef _shooterRef { get; set; }
     [Networked] private bool _hasHitNet { get; set; }
+    [Networked] private float _maxDistance { get; set; }
+    [Networked] private float _travelledDistance { get; set; }
 
-    public void InitBullet(float dmg, PlayerRef shooter)
+    public void InitBullet(float dmg, PlayerRef shooter, float maxDistance)
     {
         _damage = dmg;
         _shooterRef = shooter;
+        _maxDistance = maxDistance;
+        _travelledDistance = 0f;
         _hasHitNet = false; // Đảm bảo reset khi mới spawn
         _destructionTimer = TickTimer.CreateFromSeconds(Runner, lifeTime);
     }
@@ -33,8 +37,16 @@ public class Bullet : NetworkBehaviour
         if (_hasHitNet) return;
 
         float moveDistance = speed * Runner.DeltaTime;
-        if (moveDistance <= 0) moveDistance = 0.1f; 
+        if (moveDistance <= 0) moveDistance = 0.1f;
 
+        float remaining = Mathf.Max(_maxDistance - _travelledDistance, 0f);
+        if (remaining <= 0f)
+        {
+            Runner.Despawn(Object);
+            return;
+        }
+
+        moveDistance = Mathf.Min(moveDistance, remaining);
         Vector3 direction = transform.forward;
 
         // 3. Dự đoán va chạm
@@ -61,6 +73,11 @@ public class Bullet : NetworkBehaviour
 
         // 4. Di chuyển nếu không trúng gì (hoặc trúng chính mình)
         transform.position += direction * moveDistance;
+        _travelledDistance += moveDistance;
+        if (_travelledDistance >= _maxDistance)
+        {
+            Runner.Despawn(Object);
+        }
     }
 
     private void HandleHit(Collider other)

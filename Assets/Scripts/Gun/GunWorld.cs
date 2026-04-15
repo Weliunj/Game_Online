@@ -5,7 +5,7 @@ public class GunWorld : NetworkBehaviour
 {
     public static readonly System.Collections.Generic.List<GunWorld> AllGuns = new();
 
-    public Rigidbody rb;
+    private Rigidbody rb;
     public GameObject firePos;
     private Collider[] colliders;
     
@@ -22,6 +22,7 @@ public class GunWorld : NetworkBehaviour
 
     [Header("ZoomImg")]
     public string zoomImgName = "";
+    [HideInInspector]
     public GameObject zoomImg = null;
 
     public override void Spawned()

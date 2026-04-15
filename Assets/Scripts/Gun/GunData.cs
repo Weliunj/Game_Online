@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum AmmoType { Pistol, Rifle, Sniper }
+public enum AmmoType { Pistol, Smg, Shotgun, Rifle, Sniper }
 
 [CreateAssetMenu(fileName = "New Weapon", menuName = "FPS/Weapon Data")]
 public class GunData : ScriptableObject 

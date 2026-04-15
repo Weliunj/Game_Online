@@ -12,6 +12,7 @@ public class LocalHUDController : MonoBehaviour
     [Header("Local HUD Sliders")]
     [SerializeField] private Slider localHPSlider;
     [SerializeField] private Slider localStaminaSlider;
+    [SerializeField] private Image Crosshair;
 
     [Header("Blood Effect")]
     [SerializeField] private Image bloodImage;
@@ -43,6 +44,8 @@ public class LocalHUDController : MonoBehaviour
     public TextMeshProUGUI PistolAmmoText;
     public TextMeshProUGUI RifleAmmoText;
     public TextMeshProUGUI SniperAmmoText;
+    public TextMeshProUGUI SmgAmmoText;
+    public TextMeshProUGUI ShotgunAmmoText;
 
     private StatsHandler _target;
     private float _fpsSmoothed;
@@ -146,6 +149,8 @@ public class LocalHUDController : MonoBehaviour
             SetText(PistolAmmoText, "PistolAmmo: -");
             SetText(RifleAmmoText, "RifleAmmo: -");
             SetText(SniperAmmoText, "SniperAmmo: -");
+            SetText(SmgAmmoText, "SmgAmmo: -");
+            SetText(ShotgunAmmoText, "ShotgunAmmo: -");
             SetText(MeleeNameText, "Melee: None");
             if (MeleeNameText != null) MeleeNameText.color = Color.white;
             
@@ -180,6 +185,8 @@ public class LocalHUDController : MonoBehaviour
         SetText(PistolAmmoText, combat != null ? $"PistolAmmo: {combat.pistolAmmoReserve}" : "PistolAmmo: -");
         SetText(RifleAmmoText, combat != null ? $"RifleAmmo: {combat.rifleAmmoReserve}" : "RifleAmmo: -");
         SetText(SniperAmmoText, combat != null ? $"SniperAmmo: {combat.sniperAmmoReserve}" : "SniperAmmo: -");
+        SetText(SmgAmmoText, combat != null ? $"SmgAmmo: {combat.smgAmmoReserve}" : "SmgAmmo: -");
+        SetText(ShotgunAmmoText, combat != null ? $"ShotgunAmmo: {combat.shotgunAmmoReserve}" : "ShotgunAmmo: -");
 
         if (combat != null)
         {
@@ -192,6 +199,15 @@ public class LocalHUDController : MonoBehaviour
             if (GunNameText != null) GunNameText.color = combat.curSlot == 2 ? Color.green : Color.white;
         }
 
+        if (combat.equippedGun != null && combat.IsReloading)
+        {
+            SetText(GunReloadingText, "Reloading...");
+        }
+        else
+        {
+            SetText(GunReloadingText, "");
+        }
+        
         var gun = combat != null ? combat.equippedGun : null;
         if (gun == null || gun.gunData == null)
         {
@@ -206,24 +222,29 @@ public class LocalHUDController : MonoBehaviour
             return;
         }
 
-        if (combat != null && combat.IsReloading)
-        {
-            SetText(GunReloadingText, "Reloading...");
-        }
-        else
-        {
-            SetText(GunReloadingText, "");
-        }
-
         var data = gun.gunData;
         SetText(GunNameText, $"Gun: {data.weaponName}");
-        SetText(GunAmmoText, $"Ammo: {gun.ammoRemaining} / {Convert.ToString(data.ammoType == AmmoType.Pistol ? combat.pistolAmmoReserve : data.ammoType == AmmoType.Rifle ? combat.rifleAmmoReserve : combat.sniperAmmoReserve)}");
+        
+        int reserveAmmo = data.ammoType == AmmoType.Pistol ? combat.pistolAmmoReserve 
+            : data.ammoType == AmmoType.Rifle ? combat.rifleAmmoReserve 
+            : data.ammoType == AmmoType.Sniper ? combat.sniperAmmoReserve
+            : data.ammoType == AmmoType.Smg ? combat.smgAmmoReserve
+            : combat.shotgunAmmoReserve;
+        SetText(GunAmmoText, $"Ammo: {gun.ammoRemaining} / {reserveAmmo}");
         SetText(GunDamageText, $"Damage: {data.damage:0.##}");
         SetText(GunFireRateText, $"FireRate: {data.fireRate:0.###}");
         SetText(GunRangeText, $"Range: {data.range:0.##}");
         SetText(GunMagSizeText, $"Mag: {data.magSize}");
         SetText(GunReloadTimeText, $"Reload: {data.reloadTime:0.##}s");
         SetText(GunisAutomaticText, $"Auto: {(data.isAutomatic ? "Yes" : "No")}");
+    }
+
+    public void SetCrosshairColor(Color color)
+    {
+        if (Crosshair != null)
+        {
+            Crosshair.color = color;
+        }
     }
 
     private static void SetText(TextMeshProUGUI field, string value)
