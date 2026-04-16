@@ -17,3 +17,5 @@ MonoBehaviour:
   damage: 5
   staminaCost: 5
   attackRate: 0.5
+  radius: 0.35
+  distance: 1.5

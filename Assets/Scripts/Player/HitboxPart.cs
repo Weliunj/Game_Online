@@ -16,6 +16,17 @@ public class HitboxPart : MonoBehaviour
     public void OnHit(float baseDamage, PlayerRef shooter) 
     {
         float finalDamage = baseDamage * damageMultiplier;
+        if (rootStats == null)
+        {
+            rootStats = GetComponentInParent<StatsHandler>();
+        }
+
+        if (rootStats == null)
+        {
+            Debug.LogWarning($"[HitboxPart] Missing rootStats on hitbox {name}");
+            return;
+        }
+
         rootStats.RPC_TakeDamage(finalDamage, shooter); // Truyền thêm người bắn
     }
 }

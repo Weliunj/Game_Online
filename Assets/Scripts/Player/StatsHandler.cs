@@ -29,6 +29,7 @@ public class StatsHandler : NetworkBehaviour
     [Networked] public float NetworkCrouchMove { get; set; } // 0: Đứng im, 1: Di chuyển khi đang ngồi
     [Networked] public bool IsCrouching { get; set; }
     [Networked] public bool IsDancing { get; set; }
+    [Networked] public bool IsHealing { get; set; }
 
     [Networked] public TickTimer LandingDelayTimer { get; set; }
     public bool IsLandingLocked => !LandingDelayTimer.ExpiredOrNotRunning(Runner);
@@ -112,11 +113,28 @@ public class StatsHandler : NetworkBehaviour
             if (NetworkHealth <= 0)
             {
                 IsDead = true;
+
                 // Cộng điểm cho người giết
-                if (Runner.TryGetPlayerObject(killer, out var killerObj))
+                if (killer == PlayerRef.None)
+                {
+                    Debug.LogWarning($"[StatsHandler] Kill has no valid killer ref for {gameObject.name}");
+                }
+                else if (Runner.TryGetPlayerObject(killer, out var killerObj))
                 {
                     var killerStats = killerObj.GetComponent<StatsHandler>();
-                    if (killerStats != null) killerStats.Score += 100;
+                    if (killerStats != null)
+                    {
+                        killerStats.Score += 100;
+                        Debug.Log($"[StatsHandler] {killerObj.name} scored 100 points for killing {gameObject.name}. Total: {killerStats.Score}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[StatsHandler] Killer object found but StatsHandler missing: {killerObj.name}");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[StatsHandler] Could not resolve killer object for PlayerRef {killer}");
                 }
             }
             RPC_ShowBloodEffect(Object.InputAuthority);
@@ -155,6 +173,7 @@ public class StatsHandler : NetworkBehaviour
         _deathHandled = true;
 
         if (anim != null) anim.SetTrigger("Die");
+        IsHealing = false;
 
         // Chết là phải rơi súng, không cần out server.
         var combat = GetComponent<PlayerCombat>();

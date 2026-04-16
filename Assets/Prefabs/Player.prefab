@@ -405,6 +405,7 @@ GameObject:
   - component: {fileID: 7234823233390691569}
   - component: {fileID: 515688232855161707}
   - component: {fileID: 7593492894512135527}
+  - component: {fileID: 5263002798116100922}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -454,6 +455,7 @@ MonoBehaviour:
   - {fileID: 7234823233390691569}
   - {fileID: 515688232855161707}
   - {fileID: 7593492894512135527}
+  - {fileID: 5263002798116100922}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &6467244814416610502
 MonoBehaviour:
@@ -564,6 +566,7 @@ MonoBehaviour:
   _NetworkCrouchMove: 0
   _IsCrouching: 0
   _IsDancing: 0
+  _IsHealing: 0
 --- !u!114 &7234823233390691569
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -603,11 +606,11 @@ MonoBehaviour:
   MeleeDropPending: 0
   FistInSlot: {fileID: 11400000, guid: 9374714e3b7cb3e4b9df330205156bc8, type: 2}
   meleeInSlot: {fileID: 0}
-  pistolAmmoReserve: 100
-  rifleAmmoReserve: 400
-  sniperAmmoReserve: 50
-  smgAmmoReserve: 100
-  shotgunAmmoReserve: 20
+  pistolAmmoReserve: 10
+  rifleAmmoReserve: 30
+  sniperAmmoReserve: 5
+  smgAmmoReserve: 70
+  shotgunAmmoReserve: 10
   enableAimDebug: 1
   Hat: {fileID: 15812363514153202}
   body: {fileID: 525379318725817389}
@@ -629,6 +632,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f3e7602fa07c8946976a5b7a299a5c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DanceAct
+--- !u!114 &5263002798116100922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5467785558005741727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073164df274ed4848b5942a1d7a3486b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealHandle
+  bandageBtn: {fileID: 0}
+  medkitSBtn: {fileID: 0}
+  medkitLBtn: {fileID: 0}
+  PillbottleBtn: {fileID: 0}
+  SyringeBtn: {fileID: 0}
+  medkitLAmount: 0
+  bandageAmount: 0
+  medkitSAmount: 0
+  PillbottleAmount: 0
+  SyringeAmount: 0
+  bandageData: {fileID: 11400000, guid: 8cc5687abccceb543b370a6ed2d7c580, type: 2}
+  medkitSData: {fileID: 11400000, guid: da6f02bf0aea0874db35a7ce75ac502d, type: 2}
+  medkitLData: {fileID: 11400000, guid: 99d03de025fc1b244845ea3c56721f85, type: 2}
+  PillbottleData: {fileID: 11400000, guid: 6ea3d9f831290fb469fc2084fd80426d, type: 2}
+  SyringeData: {fileID: 11400000, guid: 3b72091822cf2b449b1f2f76fe1f431d, type: 2}
+  _IsHealing: 0
+  _CurrentHealType: 0
 --- !u!1 &8264358661384262696
 GameObject:
   m_ObjectHideFlags: 0

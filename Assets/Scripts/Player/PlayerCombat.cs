@@ -406,13 +406,18 @@ public class PlayerCombat : NetworkBehaviour
         if (Camera.main == null) return;
 
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        float range = 1.4f; // Tầm đánh cận chiến
         int layerMask = ~LayerMask.GetMask("Fire");
 
-        // --- DEBUG SPHERECAST ---
-        Debug.DrawRay(ray.origin, ray.direction * range, Color.red, 2f);
+        // --- DEBUG: vẽ tia ---
+        Debug.DrawRay(ray.origin, ray.direction * currentMelee.distance, Color.red, 2f);
 
-        RaycastHit[] hits = Physics.SphereCastAll(ray, 0.35f, range, layerMask);
+        // --- SPHERECAST ---
+        RaycastHit[] hits = Physics.SphereCastAll(
+        ray,
+        currentMelee.radius,     // bán kính hình cầu
+        currentMelee.distance,   // chiều dài tia
+        layerMask
+    );
 
         float closestDist = float.MaxValue;
         HitboxPart targetPart = null;
@@ -630,6 +635,24 @@ public class PlayerCombat : NetworkBehaviour
                     break;
                 }
             }
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_PickUpAmmo(int amount, int type)
+    {
+        if (!Object.HasStateAuthority) return;
+        if (!System.Enum.IsDefined(typeof(AmmoType), type))
+            return;
+
+        AmmoType ammoType = (AmmoType)type;
+        switch (ammoType)
+        {
+            case AmmoType.Pistol: pistolAmmoReserve += amount; break;
+            case AmmoType.Rifle: rifleAmmoReserve += amount; break;
+            case AmmoType.Sniper: sniperAmmoReserve += amount; break;
+            case AmmoType.Smg: smgAmmoReserve += amount; break;
+            case AmmoType.Shotgun: shotgunAmmoReserve += amount; break;
         }
     }
 }
