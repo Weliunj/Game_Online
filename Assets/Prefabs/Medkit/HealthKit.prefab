@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 3953835655732030181}
   - component: {fileID: 333837563411033276}
   - component: {fileID: 257151757920747004}
-  - component: {fileID: 4915355128447656772}
   - component: {fileID: 6281279804506510839}
   m_Layer: 0
   m_Name: HealthKit
@@ -184,26 +183,8 @@ MonoBehaviour:
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 4915355128447656772}
   - {fileID: 6281279804506510839}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &4915355128447656772
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3908186071195390161}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
-  _stateAuthorityChangeErrorCorrectionDelta: 0
-  SyncScale: 0
-  SyncParent: 0
-  _autoAOIOverride: 1
-  DisableSharedModeInterpolation: 0
 --- !u!114 &6281279804506510839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -218,5 +199,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MedkitPack
   medkitModels:
   - {fileID: 216043043027239904, guid: 4e3ccc8207e2f2f4586d77a20ffc8883, type: 3}
+  - {fileID: 4516565493690499037, guid: 440211f51c1d7e94192aab29bc7d6f63, type: 3}
+  - {fileID: 7888358981939075044, guid: 4042c1e038ce48c459c050569d213d9a, type: 3}
+  - {fileID: 625242516236402489, guid: 2e5ee8a0fd211954a86518790ec2d0f9, type: 3}
+  - {fileID: 3160876146029708423, guid: 4a3c8c821c6af3c4cb0ff8d61b1177e5, type: 3}
   minitemAmount: 2
   maxitemAmount: 7

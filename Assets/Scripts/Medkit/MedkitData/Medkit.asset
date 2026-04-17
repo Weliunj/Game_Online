@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MedkitData
   MedkitName: Medkit
   MedkitIcon: {fileID: 0}
+  MedkitPrefab: {fileID: 7888358981939075044, guid: 4042c1e038ce48c459c050569d213d9a, type: 3}
   timeToUse: 5
   healAmount: 40

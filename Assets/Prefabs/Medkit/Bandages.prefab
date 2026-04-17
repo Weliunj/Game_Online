@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 7826790178478180698}
   - component: {fileID: 8968416191524622589}
   - component: {fileID: 8317667692962394652}
-  - component: {fileID: 7730375854848262732}
   - component: {fileID: -2982046737314608571}
   m_Layer: 0
   m_Name: Bandages
@@ -181,29 +180,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
   SortKey: 3235734303
   ObjectInterest: 1
-  Flags: 262145
+  Flags: 524289
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 7730375854848262732}
   - {fileID: -2982046737314608571}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &7730375854848262732
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 216043043027239904}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
-  _stateAuthorityChangeErrorCorrectionDelta: 0
-  SyncScale: 0
-  SyncParent: 0
-  _autoAOIOverride: 1
-  DisableSharedModeInterpolation: 0
 --- !u!114 &-2982046737314608571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -216,5 +197,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6601f775f55acdf488835a22ea0b429d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MedkitWorld
-  medkitType: 0
+  medkitType: 2
   medkitData: {fileID: 11400000, guid: 8cc5687abccceb543b370a6ed2d7c580, type: 2}
+  hasPickup: 0

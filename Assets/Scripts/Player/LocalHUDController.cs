@@ -47,11 +47,17 @@ public class LocalHUDController : MonoBehaviour
     public TextMeshProUGUI SmgAmmoText;
     public TextMeshProUGUI ShotgunAmmoText;
 
-    private StatsHandler _target;
+    [Header("HealHandle")]
+    private HealHandle healHandle;
+    public TextMeshProUGUI[] HealText;
+
+    private StatsHandler stats;
     private float _fpsSmoothed;
 
     private void Awake()
     {
+        foreach(var h in HealText){ h.text = "0"; }
+
         DebugUI.SetActive(false);
         Instance = this;
         if (bloodImage != null)
@@ -67,9 +73,13 @@ public class LocalHUDController : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    public void SetTarget(StatsHandler target)
+    public void SetStatsHandle(StatsHandler _stats)
     {
-        _target = target;
+        stats = _stats;
+    }
+    public void SetHealHandle(HealHandle _heal)
+    {
+        healHandle = _heal;
     }
 
     private void Update()
@@ -80,8 +90,8 @@ public class LocalHUDController : MonoBehaviour
             ToggleDebugUI();
         }
 
-        // Chỉ cập nhật thông số khi DebugUI đang hiện để tiết kiệm hiệu năn
-            UpdateDebugUI();
+        UpdateDebugUI();
+        if(healHandle.toggleHeal) UpdateMedkitUI();
     }
 
     private void ToggleDebugUI()
@@ -136,7 +146,7 @@ public class LocalHUDController : MonoBehaviour
         _fpsSmoothed = Mathf.Lerp(_fpsSmoothed, 1f / Mathf.Max(Time.unscaledDeltaTime, 0.0001f), 0.1f);
         SetText(FPSText, $"FPS: {Mathf.RoundToInt(_fpsSmoothed)}");
 
-        if (_target == null)
+        if (stats == null)
         {
             SetText(PingText, "Ping: N/A");
             SetText(ServerStatusText, "Status: N/A");
@@ -167,21 +177,21 @@ public class LocalHUDController : MonoBehaviour
             return;
         }
 
-        var runner = _target.Runner;
+        var runner = stats.Runner;
         SetText(PingText, "Ping: N/A");
         SetText(ServerStatusText, runner != null && runner.IsRunning ? $"Status: {runner.Mode}" : "Status: Offline");
         SetText(ServerText, runner != null && runner.IsRunning ? "Server: Connected" : "Server: Disconnected");
 
-        var pui = _target.GetComponent<PlayerUI>();
+        var pui = stats.GetComponent<PlayerUI>();
         SetText(PlayerNameText, pui != null ? $"Player: {pui.PlayerName}" : "Player: N/A");
-        SetText(PlayerHealthText, $"HP: {Mathf.CeilToInt(_target.NetworkHealth)} / {Mathf.CeilToInt(_target.maxHealth)}");
-        SetText(PlayerStaminaText, $"Stamina: {Mathf.CeilToInt(_target.NetworkStamina)} / {Mathf.CeilToInt(_target.maxStamina)}");
+        SetText(PlayerHealthText, $"HP: {Mathf.CeilToInt(stats.NetworkHealth)} / {Mathf.CeilToInt(stats.maxHealth)}");
+        SetText(PlayerStaminaText, $"Stamina: {Mathf.CeilToInt(stats.NetworkStamina)} / {Mathf.CeilToInt(stats.maxStamina)}");
 
-        var movement = _target.GetComponent<PlayerMovement>();
+        var movement = stats.GetComponent<PlayerMovement>();
         SetText(PlayerisSprintingText, $"Sprinting: {(movement != null && movement.isSprinting ? "Yes" : "No")}");
-        SetText(PlayerisCrouchingText, $"Crouching: {(_target.IsCrouching ? "Yes" : "No")}");
+        SetText(PlayerisCrouchingText, $"Crouching: {(stats.IsCrouching ? "Yes" : "No")}");
 
-        var combat = _target.GetComponent<PlayerCombat>();
+        var combat = stats.GetComponent<PlayerCombat>();
         SetText(PistolAmmoText, combat != null ? $"PistolAmmo: {combat.pistolAmmoReserve}" : "PistolAmmo: -");
         SetText(RifleAmmoText, combat != null ? $"RifleAmmo: {combat.rifleAmmoReserve}" : "RifleAmmo: -");
         SetText(SniperAmmoText, combat != null ? $"SniperAmmo: {combat.sniperAmmoReserve}" : "SniperAmmo: -");
@@ -239,6 +249,14 @@ public class LocalHUDController : MonoBehaviour
         SetText(GunisAutomaticText, $"Auto: {(data.isAutomatic ? "Yes" : "No")}");
     }
 
+    private void UpdateMedkitUI()
+    {
+        SetText(HealText[0], Convert.ToString(healHandle.SyringeAmount));
+        SetText(HealText[1], Convert.ToString(healHandle.medkitAmount));
+        SetText(HealText[2], Convert.ToString(healHandle.SmallMedkitAmount));
+        SetText(HealText[3], Convert.ToString(healHandle.bandageAmount));
+        SetText(HealText[4], Convert.ToString(healHandle.PillbottleAmount));
+    }
     public void SetCrosshairColor(Color color)
     {
         if (Crosshair != null)

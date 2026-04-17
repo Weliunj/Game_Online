@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MedkitData
   MedkitName: PillBottle
   MedkitIcon: {fileID: 0}
+  MedkitPrefab: {fileID: 625242516236402489, guid: 2e5ee8a0fd211954a86518790ec2d0f9, type: 3}
   timeToUse: 1
   healAmount: 10

@@ -11,6 +11,7 @@ public class MouseLook : NetworkBehaviour
     public CinemachineCamera _vcam;
     private CinemachineThirdPersonFollow _tpFollow;
     private StatsHandler stats;
+    private HealHandle healhandle;
 
     [Header("Look Settings")]
     [Networked] public float _networkVerticalRotation { get; set; }
@@ -31,6 +32,7 @@ public class MouseLook : NetworkBehaviour
     public override void Spawned()
     {
         if (!HasInputAuthority) return;
+        healhandle = GetComponent<HealHandle>();
         stats = GetComponent<StatsHandler>();
         _cameraHolderTransform = transform.Find(cameraHolderName);
         _vcam = FindFirstObjectByType<CinemachineCamera>();
@@ -82,7 +84,7 @@ public class MouseLook : NetworkBehaviour
     {
         if (!HasInputAuthority) return;
         if (!_isCursorLocked) return;
-
+        if (healhandle.toggleHeal) return;
         // 1. XOAY CHUỘT DỌC
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Runner.DeltaTime;
         _verticalRotation -= mouseY;

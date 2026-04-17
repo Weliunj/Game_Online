@@ -10,9 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 17fd071b712425444b22b49ce7a1f11e, type: 3}
-  m_Name: MedkitS
+  m_Name: Small Mekit
   m_EditorClassIdentifier: Assembly-CSharp::MedkitData
-  MedkitName: MedkitS
+  MedkitName: Small Medkit
   MedkitIcon: {fileID: 0}
+  MedkitPrefab: {fileID: 4516565493690499037, guid: 440211f51c1d7e94192aab29bc7d6f63, type: 3}
   timeToUse: 3
   healAmount: 25

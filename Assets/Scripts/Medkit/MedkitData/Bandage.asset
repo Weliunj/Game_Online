@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MedkitData
   MedkitName: Bandage
   MedkitIcon: {fileID: 0}
+  MedkitPrefab: {fileID: 216043043027239904, guid: 4e3ccc8207e2f2f4586d77a20ffc8883, type: 3}
   timeToUse: 2
   healAmount: 15

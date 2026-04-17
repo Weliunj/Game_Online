@@ -52,7 +52,7 @@ public class StatsHandler : NetworkBehaviour
         {
             var hud = LocalHUDController.Instance;
             if (hud != null)
-                hud.SetTarget(this);
+                hud.SetStatsHandle(this);
         }
     }
 

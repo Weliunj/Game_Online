@@ -5,6 +5,7 @@ using System.Collections;
 public class PlayerCombat : NetworkBehaviour
 {
     private StatsHandler stats;
+    private HealHandle healHandle;
     public GameObject HandOffset;
     public GameObject DropPos;
 
@@ -55,6 +56,7 @@ public class PlayerCombat : NetworkBehaviour
 
     public override void Spawned()
     {
+        healHandle = GetComponent<HealHandle>();
         stats = GetComponent<StatsHandler>();
         animator = GetComponentInChildren<Animator>();
         mouseLook = GetComponent<MouseLook>();
@@ -198,6 +200,7 @@ public class PlayerCombat : NetworkBehaviour
 
     private void HandleInput()
     {
+        if(healHandle.toggleHeal) return;
         // KHÔNG cho phép nhận Input đánh/bắn nếu chuột đang được mở (hiện con trỏ)
         if (mouseLook != null && !mouseLook.IsCursorLocked)
         {

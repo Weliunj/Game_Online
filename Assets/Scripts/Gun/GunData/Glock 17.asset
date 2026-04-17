@@ -21,9 +21,9 @@ MonoBehaviour:
   reloadTime: 2
   ZoomMode: 0
   hasZoomImg: 0
-  DivmouseSensitivity: 3
+  DivmouseSensitivity: 4
   cameraholder: {x: 0.4, y: 0.05, z: 0}
   DistanceCinema: 0.3
-  POV: 25
+  POV: 30
   isAutomatic: 0
   ammoType: 0
