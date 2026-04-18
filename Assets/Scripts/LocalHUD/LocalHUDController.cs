@@ -5,9 +5,10 @@ using TMPro;
 using Fusion;
 using System;
 
-public class LocalHUDController : MonoBehaviour
+public partial class LocalHUDController : MonoBehaviour
 {
     public static LocalHUDController Instance { get; private set; }
+    private StatsHandler stats;
 
     [Header("Local HUD Sliders")]
     [SerializeField] private Slider localHPSlider;
@@ -46,18 +47,11 @@ public class LocalHUDController : MonoBehaviour
     public TextMeshProUGUI SniperAmmoText;
     public TextMeshProUGUI SmgAmmoText;
     public TextMeshProUGUI ShotgunAmmoText;
-
-    [Header("HealHandle")]
-    private HealHandle healHandle;
-    public TextMeshProUGUI[] HealText;
-
-    private StatsHandler stats;
     private float _fpsSmoothed;
 
     private void Awake()
     {
-        foreach(var h in HealText){ h.text = "0"; }
-
+        Heal_Awake();
         DebugUI.SetActive(false);
         Instance = this;
         if (bloodImage != null)
@@ -91,7 +85,7 @@ public class LocalHUDController : MonoBehaviour
         }
 
         UpdateDebugUI();
-        if(healHandle.toggleHeal) UpdateMedkitUI();
+        Heal_Update();
     }
 
     private void ToggleDebugUI()
@@ -247,15 +241,6 @@ public class LocalHUDController : MonoBehaviour
         SetText(GunMagSizeText, $"Mag: {data.magSize}");
         SetText(GunReloadTimeText, $"Reload: {data.reloadTime:0.##}s");
         SetText(GunisAutomaticText, $"Auto: {(data.isAutomatic ? "Yes" : "No")}");
-    }
-
-    private void UpdateMedkitUI()
-    {
-        SetText(HealText[0], Convert.ToString(healHandle.SyringeAmount));
-        SetText(HealText[1], Convert.ToString(healHandle.medkitAmount));
-        SetText(HealText[2], Convert.ToString(healHandle.SmallMedkitAmount));
-        SetText(HealText[3], Convert.ToString(healHandle.bandageAmount));
-        SetText(HealText[4], Convert.ToString(healHandle.PillbottleAmount));
     }
     public void SetCrosshairColor(Color color)
     {

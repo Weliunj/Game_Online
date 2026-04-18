@@ -5,16 +5,17 @@ public class MedkitWorld : NetworkBehaviour
 {
     public MedkitType medkitType;
     public MedkitData medkitData;
-    public bool hasPickup = false;
+    [Networked] private bool hasPichup { get; set; }
 
     private void OnTriggerEnter(Collider other)
     {
+        if (!Object.HasStateAuthority) return;
         if (other.CompareTag("Player"))
         {
             var healhd = other.GetComponent<HealHandle>();
-            if (healhd != null && !hasPickup)
+            if (healhd != null && !hasPichup)
             {
-                hasPickup = true;
+                hasPichup = true;
                 healhd.RPC_PickUpMedkit(1, (int)this.medkitType);
                 Runner.Despawn(Object);
             }

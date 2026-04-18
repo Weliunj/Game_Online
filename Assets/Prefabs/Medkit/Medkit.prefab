@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 3885197695282228054}
   - component: {fileID: 163273538805810391}
   - component: {fileID: -5071259033595216306}
+  - component: {fileID: 8076172981015549749}
   m_Layer: 0
   m_Name: Medkit
   m_TagString: Untagged
@@ -135,7 +136,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.23408985
+  m_Radius: 0.33
   m_Height: 0.91859436
   m_Direction: 0
   m_Center: {x: -0.0026779175, y: 0.1932883, z: -0.0019006729}
@@ -184,6 +185,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: -5071259033595216306}
+  - {fileID: 8076172981015549749}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-5071259033595216306
 MonoBehaviour:
@@ -199,3 +201,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MedkitWorld
   medkitType: 1
   medkitData: {fileID: 11400000, guid: 99d03de025fc1b244845ea3c56721f85, type: 2}
+--- !u!114 &8076172981015549749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7888358981939075044}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0

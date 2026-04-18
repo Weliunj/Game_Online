@@ -9,6 +9,7 @@ public class HealHandle : NetworkBehaviour
     private PlayerMovement movement;
     private Animator animator;
     private bool _hasConsumedHealingItem;
+    private bool _hasDroppedItemsOnDeath;
 
     [Header("Medkit tool")]
     public int medkitAmount = 0;
@@ -67,17 +68,17 @@ public class HealHandle : NetworkBehaviour
 
         if (HealPanel != null)
         {
-            useBtn[0] = HealPanel.transform.Find("SyringeBtn").GetComponent<Button>();
-            useBtn[1] = HealPanel.transform.Find("MedkitBtn").GetComponent<Button>();
-            useBtn[2] = HealPanel.transform.Find("SmallMedkitBtn").GetComponent<Button>();
-            useBtn[3] = HealPanel.transform.Find("BandageBtn").GetComponent<Button>();
-            useBtn[4] = HealPanel.transform.Find("PillbottleBtn").GetComponent<Button>();
+            useBtn[0] = HealPanel.transform.Find("Slot1").transform.Find("SyringeBtn").GetComponent<Button>();
+            useBtn[1] = HealPanel.transform.Find("Slot2").transform.Find("MedkitBtn").GetComponent<Button>();
+            useBtn[2] = HealPanel.transform.Find("Slot3").transform.Find("SmallMedkitBtn").GetComponent<Button>();
+            useBtn[3] = HealPanel.transform.Find("Slot4").transform.Find("BandageBtn").GetComponent<Button>();
+            useBtn[4] = HealPanel.transform.Find("Slot5").transform.Find("PillbottleBtn").GetComponent<Button>();
             
-            dropBtn[0] = HealPanel.transform.Find("DropSyringeBtn").GetComponent<Button>();
-            dropBtn[1] = HealPanel.transform.Find("DropMedkitBtn").GetComponent<Button>();
-            dropBtn[2] = HealPanel.transform.Find("DropSmallMedkitBtn").GetComponent<Button>();
-            dropBtn[3] = HealPanel.transform.Find("DropBandageBtn").GetComponent<Button>();
-            dropBtn[4] = HealPanel.transform.Find("DropPillbottleBtn").GetComponent<Button>();
+            dropBtn[0] = HealPanel.transform.Find("Slot1").transform.Find("DropSyringeBtn").GetComponent<Button>();
+            dropBtn[1] = HealPanel.transform.Find("Slot2").transform.Find("DropMedkitBtn").GetComponent<Button>();
+            dropBtn[2] = HealPanel.transform.Find("Slot3").transform.Find("DropSmallMedkitBtn").GetComponent<Button>();
+            dropBtn[3] = HealPanel.transform.Find("Slot4").transform.Find("DropBandageBtn").GetComponent<Button>();
+            dropBtn[4] = HealPanel.transform.Find("Slot5").transform.Find("DropPillbottleBtn").GetComponent<Button>();
             HealPanel.SetActive(false);
         }
         if (HasInputAuthority)
@@ -102,11 +103,22 @@ public class HealHandle : NetworkBehaviour
         if (stats == null) stats = GetComponent<StatsHandler>();
         if (stats == null) return;
 
-        if (stats.IsDead && IsHealing)
+        if (stats.IsDead)
         {
-            CancelHealingInternal(true);
+            if (IsHealing)
+            {
+                CancelHealingInternal(true);
+            }
+            
+            if (!_hasDroppedItemsOnDeath)
+            {
+                DropAllMedkits();
+                _hasDroppedItemsOnDeath = true;
+            }
             return;
         }
+        
+        _hasDroppedItemsOnDeath = false;
 
         if (IsHealing && HealTimer.Expired(Runner))
         {
@@ -145,6 +157,7 @@ public class HealHandle : NetworkBehaviour
         if (!HasInputAuthority) return;
         if (IsHealing) return;
         if (!toggleHeal) return;
+        if (!HasMedkit(type)) return;
         SetHealPanelActive(false);
         RPC_RequestHeal((int)type);
     }
@@ -186,6 +199,50 @@ public class HealHandle : NetworkBehaviour
             if (rb != null)
             {
                 rb.AddForce(transform.forward * 3f, ForceMode.Impulse);
+            }
+        }
+    }
+
+    private void DropAllMedkits()
+    {
+        DropSpecificMedkits(MedkitType.Syringe, SyringeAmount);
+        SyringeAmount = 0;
+
+        DropSpecificMedkits(MedkitType.Medkit, medkitAmount);
+        medkitAmount = 0;
+
+        DropSpecificMedkits(MedkitType.SmallMedkit, SmallMedkitAmount);
+        SmallMedkitAmount = 0;
+
+        DropSpecificMedkits(MedkitType.Bandage, bandageAmount);
+        bandageAmount = 0;
+
+        DropSpecificMedkits(MedkitType.Pillbottle, PillbottleAmount);
+        PillbottleAmount = 0;
+    }
+
+    private void DropSpecificMedkits(MedkitType type, int count)
+    {
+        if (count <= 0) return;
+        MedkitData data = GetMedkitData(type);
+        if (data == null || data.MedkitPrefab == null) return;
+
+        var dropPosition = combat != null && combat.DropPos != null ? combat.DropPos.transform.position : transform.position + transform.forward + Vector3.up;
+        var dropRotation = combat != null && combat.DropPos != null ? combat.DropPos.transform.rotation : transform.rotation;
+
+        for (int i = 0; i < count; i++)
+        {
+            var droppedObject = Runner.Spawn(data.MedkitPrefab, dropPosition, dropRotation, Object.InputAuthority);
+            if (droppedObject != null)
+            {
+                var droppedGameObject = droppedObject.gameObject;
+                Rigidbody rb = droppedGameObject.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    // Thêm một lực tản ra xung quanh ngẫu nhiên để các hộp thuốc không đè hoàn toàn lên nhau
+                    Vector3 randomScatter = new Vector3(Random.Range(-1.5f, 1.5f), Random.Range(1f, 2f), Random.Range(-1.5f, 1.5f));
+                    rb.AddForce(randomScatter, ForceMode.Impulse);
+                }
             }
         }
     }
@@ -272,7 +329,6 @@ public class HealHandle : NetworkBehaviour
                 HealWorldPrefab[i].SetActive(i == activeIndex);
         }
     }
-
     private int GetHealPrefabIndex(MedkitType type)
     {
         return type switch
@@ -366,4 +422,3 @@ public class HealHandle : NetworkBehaviour
     }
 
 }
-

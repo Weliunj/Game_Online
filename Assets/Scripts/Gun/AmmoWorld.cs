@@ -5,15 +5,16 @@ public class AmmoWorld : NetworkBehaviour
 {
     public int ammoAmount = 30;
     public AmmoType ammoType;
-    private bool hasPickup = false;
+    [Networked] private bool hasPichup { get; set; }
     private void OnTriggerEnter(Collider other)
     {
+        if (!Object.HasStateAuthority) return;
         if (other.CompareTag("Player"))
         {
             var playercb = other.GetComponent<PlayerCombat>();
-            if (playercb != null && !hasPickup)
+            if (playercb != null && !hasPichup)
             {
-                hasPickup = true;
+                hasPichup = true;
                 playercb.RPC_PickUpAmmo(ammoAmount, (int)ammoType);
                 Runner.Despawn(Object);
             }

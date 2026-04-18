@@ -15,5 +15,5 @@ MonoBehaviour:
   MedkitName: Syringe
   MedkitIcon: {fileID: 0}
   MedkitPrefab: {fileID: 3160876146029708423, guid: 4a3c8c821c6af3c4cb0ff8d61b1177e5, type: 3}
-  timeToUse: 7
+  timeToUse: 6
   healAmount: 80

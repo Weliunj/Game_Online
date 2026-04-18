@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 1300001698320086554}
   - component: {fileID: 5330562879017807141}
   - component: {fileID: 3408073893543391219}
+  - component: {fileID: -1668938954163474345}
   m_Layer: 0
   m_Name: PillBottle
   m_TagString: Untagged
@@ -184,6 +185,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 3408073893543391219}
+  - {fileID: -1668938954163474345}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &3408073893543391219
 MonoBehaviour:
@@ -199,3 +201,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MedkitWorld
   medkitType: 4
   medkitData: {fileID: 11400000, guid: 6ea3d9f831290fb469fc2084fd80426d, type: 2}
+--- !u!114 &-1668938954163474345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625242516236402489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0

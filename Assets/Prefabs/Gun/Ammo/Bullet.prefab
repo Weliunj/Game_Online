@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3683270453306125580}
   - component: {fileID: 3589328244700542668}
   - component: {fileID: 6047119845997139116}
+  - component: {fileID: 2150528475895249298}
   m_Layer: 7
   m_Name: Bullet
   m_TagString: Untagged
@@ -245,7 +246,25 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 3683270453306125580}
+  - {fileID: 2150528475895249298}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &2150528475895249298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6152012165266093810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0
 --- !u!1 &8849644791493623283
 GameObject:
   m_ObjectHideFlags: 0

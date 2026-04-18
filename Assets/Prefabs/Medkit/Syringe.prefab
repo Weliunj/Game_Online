@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 8465934050486891058}
   - component: {fileID: 5056336205728743767}
   - component: {fileID: -4437607230004633983}
+  - component: {fileID: 1789958720762119887}
   m_Layer: 0
   m_Name: Syringe
   m_TagString: Untagged
@@ -184,6 +185,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: -4437607230004633983}
+  - {fileID: 1789958720762119887}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-4437607230004633983
 MonoBehaviour:
@@ -199,3 +201,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MedkitWorld
   medkitType: 0
   medkitData: {fileID: 11400000, guid: 3b72091822cf2b449b1f2f76fe1f431d, type: 2}
+--- !u!114 &1789958720762119887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3160876146029708423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0

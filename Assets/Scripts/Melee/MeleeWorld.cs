@@ -90,21 +90,26 @@ public class MeleeWorld : NetworkBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        TryPickup(other);
+    }
+
+    private void TryPickup(Collider other)
+    {
         if (!Object.HasStateAuthority || hasOwner) return;
         if (!pickupTimer.ExpiredOrNotRunning(Runner)) return;
 
-        if (other.CompareTag("Player"))
-        {
-            NetworkObject playerNetObj = other.GetComponent<NetworkObject>();
-            PlayerCombat combat = other.GetComponent<PlayerCombat>();
+        if (!other.CompareTag("Player")) return;
 
-            // Kiểm tra nếu người chơi chưa có vũ khí cận chiến
-            if (playerNetObj != null && combat != null && combat.meleeInSlot == null)
-            {
-                hasOwner = true;
-                ownerObj = playerNetObj;
-                combat.meleeInSlot = meleeData; // Gán dữ liệu vào slot cận chiến
-            }
+        NetworkObject playerNetObj = other.GetComponent<NetworkObject>();
+        PlayerCombat combat = other.GetComponent<PlayerCombat>();
+
+        // Kiểm tra nếu người chơi chưa có vũ khí cận chiến
+        if (playerNetObj != null && combat != null && combat.meleeInSlot == null)
+        {
+            hasOwner = true;
+            ownerObj = playerNetObj;
+            combat.meleeInSlot = meleeData; // Gán dữ liệu vào slot cận chiến
+            combat.equippedMelee = this; // Đồng bộ ngay object melee cho player
         }
     }
 
