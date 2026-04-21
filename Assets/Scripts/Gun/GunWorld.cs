@@ -6,7 +6,6 @@ public class GunWorld : NetworkBehaviour
     public static readonly System.Collections.Generic.List<GunWorld> AllGuns = new();
 
     private Rigidbody rb;
-    public GameObject firePos;
     private Collider[] colliders;
     
     [Networked] public NetworkObject ownerObj { get; set; }

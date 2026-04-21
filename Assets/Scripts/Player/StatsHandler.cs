@@ -7,7 +7,9 @@ public class StatsHandler : NetworkBehaviour
 {
     private ChangeDetector _changes;
     private bool _deathHandled;
-    [Networked] public int Score { get; set; }
+    [Networked] public int killScore { get; set; }
+
+    [Networked] public NetworkString<_32> PlayerName { get; set; }
 
     [Header("HP Settings")]
     [Networked] public bool IsDead { get; set; }
@@ -39,6 +41,9 @@ public class StatsHandler : NetworkBehaviour
         anim = GetComponentInChildren<Animator>();
         _changes = GetChangeDetector(ChangeDetector.Source.SnapshotFrom | ChangeDetector.Source.SnapshotTo);
 
+        if (Object.HasInputAuthority)
+            PlayerName = RoomManager.LocalPlayerName;
+
         if (Object.HasStateAuthority) 
         {
             NetworkHealth = maxHealth;
@@ -60,11 +65,11 @@ public class StatsHandler : NetworkBehaviour
     {
         if (Object.HasStateAuthority)
         {
-            if (NetworkHealth <= 0 && !IsDead)
-            {
-                IsDead = true;
-                // Không cần gọi RPC_BroadcastDeath nữa vì ChangeDetector sẽ lo
-            }
+            // if (NetworkHealth <= 0 && !IsDead)
+            // {
+            //     IsDead = true;
+            //     // Không cần gọi RPC_BroadcastDeath nữa vì ChangeDetector sẽ lo
+            // }
 
             // Logic Stamina hồi phục
             if (IsExhausted)
@@ -105,47 +110,115 @@ public class StatsHandler : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_TakeDamage(float damage, PlayerRef killer)
     {
-        if (Object.HasStateAuthority && !IsDead)
-        {
-            NetworkHealth -= damage;
-            NetworkHealth = Mathf.Max(0, NetworkHealth);
-            
-            if (NetworkHealth <= 0)
-            {
-                IsDead = true;
+        // 1. Chỉ thoát nếu ĐÃ thực sự chết và đã xử lý xong (IsDead đã true từ trước)
+        // Bỏ kiểm tra NetworkHealth <= 0 ở đây để cho phép viên đạn cuối cùng đi xuyên qua
+        if (!Object.HasStateAuthority || IsDead) return;
 
-                // Cộng điểm cho người giết
-                if (killer == PlayerRef.None)
-                {
-                    Debug.LogWarning($"[StatsHandler] Kill has no valid killer ref for {gameObject.name}");
-                }
-                else if (Runner.TryGetPlayerObject(killer, out var killerObj))
-                {
-                    var killerStats = killerObj.GetComponent<StatsHandler>();
-                    if (killerStats != null)
-                    {
-                        killerStats.Score += 100;
-                        Debug.Log($"[StatsHandler] {killerObj.name} scored 100 points for killing {gameObject.name}. Total: {killerStats.Score}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[StatsHandler] Killer object found but StatsHandler missing: {killerObj.name}");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"[StatsHandler] Could not resolve killer object for PlayerRef {killer}");
-                }
+        // Tìm thông tin người bắn
+        StatsHandler killerStats = null;
+        foreach (var p in FindObjectsOfType<StatsHandler>())
+        {
+            if (p.Object.InputAuthority == killer) { killerStats = p; break; }
+        }
+        
+        NetworkString<_32> kName = killerStats != null ? killerStats.PlayerName : (NetworkString<_32>)"Environment";
+
+        // 2. Tính toán máu mới
+        float oldHealth = NetworkHealth;
+        NetworkHealth -= damage;
+        NetworkHealth = Mathf.Max(0, NetworkHealth);
+
+        // Thông báo sát thương và hiệu ứng
+        RPC_BroadcastDamage(kName, damage, this.PlayerName);
+        RPC_ShowBloodEffect(Object.InputAuthority);
+
+        // 3. KIỂM TRA CÚ CHỐT (Killing Blow)
+        // Nếu máu cũ > 0 mà máu mới = 0, thì ĐÂY chính là viên đạn kết liễu
+        if (oldHealth > 0 && NetworkHealth <= 0) 
+        {
+            IsDead = true; // Khóa chết ngay lập tức
+
+            if (killer != PlayerRef.None && killerStats != null)
+            {
+                // Cộng điểm: Gọi một hàm RPC chuyên biệt trên chính Object của Sát thủ 
+                // để đảm bảo quyền ghi dữ liệu (Authority) luôn đúng
+                killerStats.RPC_AddScoreFromExternal();
+                Debug.Log($"[StatsHandler] Score RPC sent to {killerStats.PlayerName}");
+                
+                // Phát thông báo Kill
+                RPC_BroadcastKill(kName, this.PlayerName, 0);
             }
-            RPC_ShowBloodEffect(Object.InputAuthority);
+            else 
+            {
+                RPC_BroadcastKill("Environment", this.PlayerName, 0);
+            }
+
+            //Goi GameManager sau 1 frame để RPC score kịp được xử lý
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.CheckWinConditionDelayed();
+                Debug.Log($"[StatsHandler] CheckWinCondition scheduled");
+            }
         }
     }
 
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_BroadcastDamage(NetworkString<_32> killerName, float damage, NetworkString<_32> victimName)
+    {
+        if (ChatManager.Instance != null)
+        {
+            string message = $"<color=orange>{killerName}</color> dealt <color=red>{damage}</color> damage to <color=orange>{victimName}</color>";
+            ChatManager.Instance.chatUI.AddMessageToUI("System", message, false);
+            Debug.Log($"[Damage] {message}");
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_BroadcastKill(NetworkString<_32> killerName, NetworkString<_32> victimName, int currentKills)
+    {
+        if (ChatManager.Instance != null && ChatManager.Instance.chatUI != null)
+        {
+            string killMsg = $"<color=red><b>[KILL]</b></color> <color=yellow>{killerName}</color> killed <color=orange>{victimName}</color>";
+            ChatManager.Instance.chatUI.AddMessageToUI("System", killMsg, false);
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_AddScoreFromExternal()
+    {
+        if (Object.HasStateAuthority)
+        {
+            this.killScore += 1;
+            Debug.Log($"[Score] {PlayerName} score updated to: {killScore}");
+        }
+    }
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
     private void RPC_ShowBloodEffect(PlayerRef player)
     {
         var hud = LocalHUDController.Instance;
         if (hud != null) hud.TriggerBloodEffect();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_AnnounceHit(PlayerRef shooter, float damage, PlayerRef target)
+    {
+        string shooterName = GetPlayerName(shooter);
+        string targetName  = GetPlayerName(target);
+
+        Debug.Log($"{shooterName} hit {targetName} for {damage}");
+
+        // Nếu có UI:
+        // KillFeedUI.Instance?.Add($"{shooterName} → {targetName}: {damage}");
+    }
+
+    private string GetPlayerName(PlayerRef playerRef)
+    {
+        if (Runner.TryGetPlayerObject(playerRef, out var obj))
+        {
+            var stats = obj.GetComponent<StatsHandler>();
+            return stats != null ? stats.PlayerName.ToString() : "Unknown";
+        }
+        return "Unknown";
     }
 
     public override void Render()

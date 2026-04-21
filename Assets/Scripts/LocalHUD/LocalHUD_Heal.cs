@@ -26,9 +26,13 @@ public partial class LocalHUDController : MonoBehaviour
 
     private void Heal_Update()
     {
+        if(healHandle == null) return;
+        
         if(healHandle.toggleHeal) 
+        {
             UpdateBtn();
             UpdateMedkitUI();
+        }
     }
     
     public void UpdateBtn()

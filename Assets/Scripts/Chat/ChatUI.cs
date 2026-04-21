@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Collections;
 
 public class ChatUI : MonoBehaviour
 {
@@ -16,6 +17,7 @@ public class ChatUI : MonoBehaviour
 
     private void Start()
     {
+        chatContent.text = "/h to open command sug.\n";
         sendButton.onClick.AddListener(OnSendButtonClicked);
         CloseChat();
         Cursor.visible = true;
@@ -59,6 +61,9 @@ public class ChatUI : MonoBehaviour
         isChatting = true;
         isTypingPrivate = false;
 
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
         inputField.ActivateInputField();
         EventSystem.current.SetSelectedGameObject(inputField.gameObject);
     }
@@ -82,8 +87,17 @@ public class ChatUI : MonoBehaviour
     }
 
     private void SubmitChat()
-    {
-        if (!string.IsNullOrEmpty(inputField.text))
+    {   
+        var text = inputField.text.Trim(); // Lấy chữ mà người chơi VỪA GÕ để kiểm tra lệnh
+        if(text == "/h" || text == "/help")
+        {
+            chatContent.text += "hello world!\n/clear or /c to clear chat.\n";
+        }
+        else if(text == "/clear" || text == "/c")
+        {
+            chatContent.text = "";
+        }
+        else if (!string.IsNullOrEmpty(text))
         {
             SendMessageAction();
         }
@@ -135,5 +149,36 @@ public class ChatUI : MonoBehaviour
         string color = isPrivate ? "<color=red>" : "<color=white>";
         string prefix = isPrivate ? "[Private] " : "";
         chatContent.text += $"{color}{prefix}<b>{sender}:</b> {msg}</color>\n";
+        
+        Debug.Log($"[ChatUI] Message added - Sender: {sender}, TextLength: {chatContent.text.Length}");
+        
+        // Force layout update and scroll to bottom
+        StartCoroutine(ScrollToBottomNextFrame());
+    }
+
+    private IEnumerator ScrollToBottomNextFrame()
+    {
+        // Wait one frame for layout to update
+        yield return null;
+        
+        if (chatContent.gameObject != null)
+        {
+            // Rebuild canvas and layout
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(chatContent.GetComponent<RectTransform>());
+            
+            // Scroll to bottom
+            var scrollRect = chatContent.GetComponentInParent<ScrollRect>();
+            if (scrollRect != null)
+            {
+                Debug.Log("[ChatUI] ScrollRect found, scrolling to bottom");
+                scrollRect.verticalNormalizedPosition = 0f;
+                Canvas.ForceUpdateCanvases();
+            }
+            else
+            {
+                Debug.LogWarning("[ChatUI] ScrollRect NOT found in parent");
+            }
+        }
     }
 }

@@ -7,6 +7,9 @@ public class LeaderboardUI : MonoBehaviour
     [Header("UI References")]
     public TextMeshProUGUI leaderboardText;
     public GameObject leaderboardContainer;
+    
+    private float updateTimer = 0f;
+    private const float UPDATE_INTERVAL = 0.2f; // Update every 0.2 seconds
 
     void Start()
     {
@@ -25,17 +28,28 @@ public class LeaderboardUI : MonoBehaviour
             leaderboardContainer.SetActive(isHoldingTab);
         }
 
-        // 3. Chỉ cập nhật dữ liệu khi đang giữ Tab để tiết kiệm hiệu năng
+        // 3. Cập nhật dữ liệu khi đang giữ Tab hoặc theo khoảng thời gian
         if (isHoldingTab)
         {
             UpdateLeaderboardData();
+            updateTimer = 0f;
+        }
+        else
+        {
+            // Cập nhật định kỳ mỗi UPDATE_INTERVAL giây để đảm bảo dữ liệu luôn được cập nhật
+            updateTimer += Time.deltaTime;
+            if (updateTimer >= UPDATE_INTERVAL)
+            {
+                UpdateLeaderboardData();
+                updateTimer = 0f;
+            }
         }
     }
 
     void UpdateLeaderboardData()
     {
         var players = FindObjectsOfType<StatsHandler>()
-            .OrderByDescending(p => p.Score)
+            .OrderByDescending(p => p.killScore)
             .Take(10)
             .ToList();
 
@@ -44,17 +58,16 @@ public class LeaderboardUI : MonoBehaviour
 
         foreach (var p in players)
         {
-            var pUI = p.GetComponent<PlayerUI>();
-            string name = pUI != null ? pUI.PlayerName.ToString() : "Unknown";
+            string name = p != null ? p.PlayerName.ToString() : "Unknown";
             
             // Highlight màu khác nếu là chính mình (Local Player)
             string color = p.Object.HasInputAuthority ? "green" : "white";
             
-            text += $"{rank}. <color={color}>{name}</color>: {p.Score} PTS\n";
+            text += $"{rank}. <color={color}>{name}</color>: {p.killScore} kills\n";
             rank++;
         }
 
         if (leaderboardText != null) 
             leaderboardText.text = text;
-        }
+    }
 }

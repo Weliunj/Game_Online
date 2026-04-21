@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 789c01409703f014595c2a33b82252b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
-  speed: 250
+  speed: 350
   lifeTime: 2
 --- !u!96 &3589328244700542668
 TrailRenderer:
@@ -158,7 +158,7 @@ TrailRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Time: 0.03
+  m_Time: 0.015
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
@@ -242,7 +242,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
   SortKey: 166187874
   ObjectInterest: 1
-  Flags: 262145
+  Flags: 524289
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 3683270453306125580}

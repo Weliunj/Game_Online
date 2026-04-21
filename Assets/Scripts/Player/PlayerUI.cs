@@ -12,14 +12,12 @@ public class PlayerUI : NetworkBehaviour
     public Slider worldHPSlider;
     [SerializeField] private TextMeshProUGUI worldNameText;
 
-    [Networked] public NetworkString<_16> PlayerName { get; set; }
-
     public override void Spawned()
     {
         stats = GetComponent<StatsHandler>();
 
         if (Object.HasInputAuthority)
-            PlayerName = RoomManager.LocalPlayerName;
+            stats.PlayerName = RoomManager.LocalPlayerName;
 
         if (Object.HasInputAuthority)
         {
@@ -37,7 +35,7 @@ public class PlayerUI : NetworkBehaviour
         if (worldHPSlider != null) worldHPSlider.value = hpPercent;
         if (worldNameText != null)
         {
-            worldNameText.text = PlayerName.ToString();
+            worldNameText.text = stats.PlayerName.ToString();
             worldNameText.gameObject.SetActive(!Object.HasInputAuthority);
         }
     }

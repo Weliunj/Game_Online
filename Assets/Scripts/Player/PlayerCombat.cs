@@ -31,6 +31,7 @@ public class PlayerCombat : NetworkBehaviour
     private bool isAimHitPlayer = false;
 
     [Header("Gun Logic")]
+    public Transform firePos;
     public MeshRenderer Hat;
     public SkinnedMeshRenderer body;
     [SerializeField] private GameObject bulletPrefab;
@@ -535,16 +536,15 @@ public class PlayerCombat : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_ShootEffect(PlayerRef shooter, Vector3 targetPoint)
     {
-        if (equippedGun != null && equippedGun.firePos != null)
+        if (equippedGun != null && firePos.position != null)
         {
-            Vector3 firePosition = equippedGun.firePos.transform.position;
-            Vector3 shotDirection = (targetPoint - firePosition).normalized;
+            Vector3 shotDirection = (targetPoint - firePos.position).normalized;
             
-            Runner.Spawn(bulletPrefab, firePosition, Quaternion.LookRotation(shotDirection), shooter, (runner, obj) => {
+            Runner.Spawn(bulletPrefab, firePos.position, Quaternion.LookRotation(shotDirection), shooter, (runner, obj) => {
                 obj.GetComponent<Bullet>().InitBullet(equippedGun.gunData.damage, shooter, equippedGun.gunData.range);
             });
 
-            Debug.DrawLine(firePosition, targetPoint, Color.yellow, 0.1f);
+            Debug.DrawLine(firePos.position, targetPoint, Color.yellow, 0.1f);
         }
     }
 

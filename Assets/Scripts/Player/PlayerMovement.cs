@@ -1,3 +1,4 @@
+using System.Collections;
 using Fusion;
 using UnityEngine;
 
@@ -26,6 +27,10 @@ public class PlayerMovement : NetworkBehaviour
 
     [Header("Animation")]
     [SerializeField] private Animator animator;
+
+    [Header("Buff")]
+    private float speedBuffMultiplier = 1f;
+    private TickTimer speedBuffTimer;
 
     public override void Spawned()
     {
@@ -101,7 +106,11 @@ public class PlayerMovement : NetworkBehaviour
             stats.ConsumingStamina(sprintStaminaCost * Runner.DeltaTime);
         }
 
-        float currSpeed = moveSpeed * speedMod;
+        if (speedBuffTimer.Expired(Runner))
+        {
+            speedBuffMultiplier = 1f;
+        }
+        float currSpeed = moveSpeed * speedMod * speedBuffMultiplier;
 
         // 5. CẬP NHẬT BIẾN ANIMATOR MẠNG
         float moveMagnitude = (move.magnitude > 0.1f) ? (isSprinting ? 2f : 1f) : 0f;
@@ -125,6 +134,8 @@ public class PlayerMovement : NetworkBehaviour
             RPC_TriggerJumpAnimation();
         }
 
+
+
         // 7. DI CHUYỂN TỔNG HỢP
         playerVelocity.y += gravityValue * Runner.DeltaTime;
         Vector3 finalMove = (move * currSpeed) + Vector3.up * playerVelocity.y;
@@ -137,14 +148,20 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
+    public void ApplySpeedBoost(float multiplier, float duration)
+    {
+        if (!Object.HasStateAuthority) return;
+
+        speedBuffMultiplier = multiplier;
+        speedBuffTimer = TickTimer.CreateFromSeconds(Runner, duration);
+    }
+
     [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
     private void RPC_TriggerJumpAnimation()
     {
         if (animator != null)
             animator.SetTrigger("Jump");
     }
-
-
 
     public override void Render()
     {

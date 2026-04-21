@@ -9801,7 +9801,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
   SortKey: 860559863
   ObjectInterest: 1
-  Flags: 1
+  Flags: 196609
   NestedObjects: []
   NetworkedBehaviours: []
   ForceRemoteRenderTimeframe: 0

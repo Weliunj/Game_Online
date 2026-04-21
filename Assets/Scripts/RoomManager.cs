@@ -17,6 +17,8 @@ public class RoomManager : MonoBehaviour
     [Header("Spawning")]
     public NetworkObject playerPrefab; 
     public GameObject spawnPos;
+    public NetworkObject gameManagerPrefab;
+
     [Tooltip("Nếu bật: người đầu tiên vào phòng sẽ bị khóa điều khiển như mannequin để giảm bug host đầu tiên.")]
     public bool firstJoinAsMannequin = true;
 
@@ -96,9 +98,17 @@ public class RoomManager : MonoBehaviour
 
                 if (_runner.IsRunning)
                 {
-                    float x = Random.Range(-70f, 70f);
-                    float z = Random.Range(-70f, 70f);
-                    var spawned = _runner.Spawn(playerPrefab, spawnPos.transform.position + new Vector3(x, 5, z), Quaternion.identity, _runner.LocalPlayer);
+                    // 1. Logic Spawn GameManager (CHỈ NGƯỜI ĐẦU TIÊN) // MỚI
+                    // Trong Shared Mode, chúng ta kiểm tra nếu chưa có Instance nào tồn tại
+                    if (GameManager.Instance == null)
+                    {
+                        Debug.Log("RoomManager: Đang khởi tạo GameManager cho phòng mới...");
+                        _runner.Spawn(gameManagerPrefab, Vector3.zero, Quaternion.identity);
+                    }
+
+                    // 2. Logic Spawn Player (Giữ nguyên của bạn)
+                    var randomPos = GetComponent<A2>();
+                    var spawned = _runner.Spawn(playerPrefab, randomPos.GetRandom().position, Quaternion.identity, _runner.LocalPlayer);
 
                     if (spawned != null && firstJoinAsMannequin && CountActivePlayers(_runner) <= 1)
                     {

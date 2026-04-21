@@ -1,10 +1,7 @@
 fileFormatVersion: 2
 guid: d6f26c385193c44479a097dd991f76ed
-PrefabImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+labels:
+- FusionPrefab
 AssetOrigin:
   serializedVersion: 1
   productId: 249507
@@ -12,3 +9,8 @@ AssetOrigin:
   packageVersion: 1.0
   assetPath: Assets/Kabungus/HouseholdItems/Prefabs/FastFoodCupBlue.prefab
   uploadId: 582139
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

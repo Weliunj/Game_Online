@@ -177,7 +177,7 @@ public partial class LocalHUDController : MonoBehaviour
         SetText(ServerText, runner != null && runner.IsRunning ? "Server: Connected" : "Server: Disconnected");
 
         var pui = stats.GetComponent<PlayerUI>();
-        SetText(PlayerNameText, pui != null ? $"Player: {pui.PlayerName}" : "Player: N/A");
+        SetText(PlayerNameText, pui != null ? $"Player: {stats.PlayerName}" : "Player: N/A");
         SetText(PlayerHealthText, $"HP: {Mathf.CeilToInt(stats.NetworkHealth)} / {Mathf.CeilToInt(stats.maxHealth)}");
         SetText(PlayerStaminaText, $"Stamina: {Mathf.CeilToInt(stats.NetworkStamina)} / {Mathf.CeilToInt(stats.maxStamina)}");
 
