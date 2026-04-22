@@ -32,7 +32,8 @@ public class WorldSpawnItems : NetworkBehaviour
     void SpawnItem()
     {
         int randPos = Random.Range(0, spawnPoints.Length);
-        int randItem = Random.Range(0, itemPrefab.Length - 1);
+        // Random.Range cho số nguyên sẽ không bao gồm giá trị max, nên không cần trừ 1
+        int randItem = Random.Range(0, itemPrefab.Length);
         Runner.Spawn(
             itemPrefab[randItem],
             spawnPoints[randPos].position,

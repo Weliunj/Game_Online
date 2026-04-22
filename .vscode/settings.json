@@ -67,5 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Game_Online.slnx"
+    "dotnet.defaultSolution": "Game_Online.slnx",
+    "geminicodeassist.enableTelemetry": true
 }

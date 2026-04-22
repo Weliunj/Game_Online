@@ -33,6 +33,14 @@ public class StatsHandler : NetworkBehaviour
     [Networked] public bool IsDancing { get; set; }
     [Networked] public bool IsHealing { get; set; }
 
+    [Header("Effects")]
+    public GameObject deathVFX;
+
+    [Header("Shield")]
+    [Networked] public int ShieldCount { get; set; }
+    public GameObject shielobj;
+    
+
     [Networked] public TickTimer LandingDelayTimer { get; set; }
     public bool IsLandingLocked => !LandingDelayTimer.ExpiredOrNotRunning(Runner);
       
@@ -113,6 +121,14 @@ public class StatsHandler : NetworkBehaviour
         // 1. Chỉ thoát nếu ĐÃ thực sự chết và đã xử lý xong (IsDead đã true từ trước)
         // Bỏ kiểm tra NetworkHealth <= 0 ở đây để cho phép viên đạn cuối cùng đi xuyên qua
         if (!Object.HasStateAuthority || IsDead) return;
+
+        // Xử lý chặn sát thương bằng khiên
+        if (damage > 0 && ShieldCount > 0)
+        {
+            ShieldCount--;
+            Debug.Log($"[StatsHandler] {PlayerName} đã chặn sát thương! Khiên còn lại: {ShieldCount}");
+            return; // Thoát sớm, hủy toàn bộ sát thương
+        }
 
         // Tìm thông tin người bắn
         StatsHandler killerStats = null;
@@ -230,6 +246,12 @@ public class StatsHandler : NetworkBehaviour
                 hud.SetBars(NetworkHealth / maxHealth, NetworkStamina / maxStamina);
         }
 
+        // Bật/tắt hiển thị object khiên bảo vệ tùy thuộc vào số lượng khiên và trạng thái sống
+        if (shielobj != null)
+        {
+            shielobj.SetActive(ShieldCount > 0 && !IsDead);
+        }
+
         // Kiểm tra thay đổi trạng thái chết qua mạng
         foreach (var change in _changes.DetectChanges(this))
         {
@@ -248,6 +270,13 @@ public class StatsHandler : NetworkBehaviour
         if (anim != null) anim.SetTrigger("Die");
         IsHealing = false;
 
+        // Chạy hiệu ứng VFX 1 lần khi chết tại vị trí của Player
+        if (deathVFX != null)
+        {
+            GameObject vfxInstance = Instantiate(deathVFX, transform.position, Quaternion.identity);
+            Destroy(vfxInstance, 1f);
+        }
+
         // Chết là phải rơi súng, không cần out server.
         var combat = GetComponent<PlayerCombat>();
         if (combat != null)
@@ -258,6 +287,7 @@ public class StatsHandler : NetworkBehaviour
         
         var mouselook = GetComponent<MouseLook>();
         if (mouselook != null) mouselook.enabled = false;
+        
 
         if (HasInputAuthority)
         {
@@ -266,6 +296,14 @@ public class StatsHandler : NetworkBehaviour
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+        }
+    }
+
+    public void ApplyShield(int n)
+    {
+        if (Object.HasStateAuthority)
+        {
+            ShieldCount += n;
         }
     }
 }

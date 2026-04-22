@@ -9787,6 +9787,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FireZone
   damagePerSecond: 10
   effectInterval: 0.5
+  timeToStartDamage: 2
 --- !u!114 &3987037908216120403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9803,5 +9804,6 @@ MonoBehaviour:
   ObjectInterest: 1
   Flags: 196609
   NestedObjects: []
-  NetworkedBehaviours: []
+  NetworkedBehaviours:
+  - {fileID: 6474499966443008333}
   ForceRemoteRenderTimeframe: 0

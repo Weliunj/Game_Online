@@ -4,6 +4,7 @@ using System.Collections;
 
 public class PlayerCombat : NetworkBehaviour
 {
+    private PlayerInput input;
     private StatsHandler stats;
     private HealHandle healHandle;
     public GameObject HandOffset;
@@ -57,6 +58,7 @@ public class PlayerCombat : NetworkBehaviour
 
     public override void Spawned()
     {
+        input = GetComponent<PlayerInput>();
         healHandle = GetComponent<HealHandle>();
         stats = GetComponent<StatsHandler>();
         animator = GetComponentInChildren<Animator>();
@@ -180,7 +182,7 @@ public class PlayerCombat : NetworkBehaviour
         }
         
         // --- XỬ LÝ VỨT VŨ KHÍ ---
-        if (Input.GetKeyDown(KeyCode.G))
+        if (Input.GetKeyDown(input.DropItem_KeyCode))
         {
             if (curSlot == 2 && equippedGun != null)
             {

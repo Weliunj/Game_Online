@@ -19,6 +19,9 @@ public partial class LocalHUDController : MonoBehaviour
     [SerializeField] private Image bloodImage;
     [SerializeField] private float fadeSpeed = 1.5f;
 
+    [Header("Voice Chat Indicator")]
+    public GameObject localVoiceChatIndicator;
+
     [Header("Ui")]
     public GameObject DebugUI;
     public TextMeshProUGUI PingText;
@@ -30,6 +33,7 @@ public partial class LocalHUDController : MonoBehaviour
     public TextMeshProUGUI PlayerStaminaText;    // ap dung cho cac bien co the hoi {curr} / {max}
     public TextMeshProUGUI PlayerisSprintingText;
     public TextMeshProUGUI PlayerisCrouchingText;
+    public TextMeshProUGUI ShieldCountText;
 
     public TextMeshProUGUI MeleeNameText;
     public TextMeshProUGUI GunNameText;
@@ -135,6 +139,14 @@ public partial class LocalHUDController : MonoBehaviour
         }
     }
 
+    public void SetVoiceChatActive(bool isTalking)
+    {
+        if (localVoiceChatIndicator != null)
+        {
+            localVoiceChatIndicator.SetActive(isTalking);
+        }
+    }
+
     private void UpdateDebugUI()
     {
         _fpsSmoothed = Mathf.Lerp(_fpsSmoothed, 1f / Mathf.Max(Time.unscaledDeltaTime, 0.0001f), 0.1f);
@@ -150,6 +162,7 @@ public partial class LocalHUDController : MonoBehaviour
             SetText(PlayerStaminaText, "Stamina: N/A");
             SetText(PlayerisSprintingText, "Sprinting: N/A");
             SetText(PlayerisCrouchingText, "Crouching: N/A");
+            SetText(ShieldCountText, "Shield: N/A");
             SetText(PistolAmmoText, "PistolAmmo: -");
             SetText(RifleAmmoText, "RifleAmmo: -");
             SetText(SniperAmmoText, "SniperAmmo: -");
@@ -191,7 +204,8 @@ public partial class LocalHUDController : MonoBehaviour
         SetText(SniperAmmoText, combat != null ? $"SniperAmmo: {combat.sniperAmmoReserve}" : "SniperAmmo: -");
         SetText(SmgAmmoText, combat != null ? $"SmgAmmo: {combat.smgAmmoReserve}" : "SmgAmmo: -");
         SetText(ShotgunAmmoText, combat != null ? $"ShotgunAmmo: {combat.shotgunAmmoReserve}" : "ShotgunAmmo: -");
-
+        SetText(ShieldCountText, $"Shield: {stats.ShieldCount}");
+        
         if (combat != null)
         {
             // Lấy tên vũ khí cận chiến hoặc báo Tay không
